@@ -1,0 +1,57 @@
+{
+    "title": "Heymemo_20250407",
+    "feature":
+    {
+        "sample_rate": 16000, 
+        "clip_frame": 100, 
+        "fft_len": 512, 
+        "frame_len": 256,
+        "n_mels": 40, 
+        "n_mfcc": 16
+    },
+
+    "dataset":
+    {
+        "train_datapath": [ "/data/data/datasets_KWS/data_feature/hi_ella/snr5_15_train/",
+         "/data/data/datasets_KWS/data_feature/pure_noise_train_tmp/",
+         "/data/data/datasets_KWS/data_feature/take_a_photo_clean/snr-20_20_train/",
+         "/data/data/datasets_KWS/data_feature/record_a_video_clean/snr-20_20_train/",
+         "/data/data/datasets_KWS/data_feature/heymemo_noisy/snr0_20_train/",
+         "/data/data/datasets_KWS/data_feature/heymemo_negative_noisy/snr0_20_train/"
+         ],
+        "train_len_array" : [100,100,100,100,200,300],
+        "train_path_num" : 6,
+        "valid_datapath": ["/data/data/datasets_KWS/data_feature/hi_ella/snr5_15_dev/", 
+                "/data/data/datasets_KWS/data_feature/Chinese/dev/",
+                "/data/data/datasets_KWS/data_feature/Chinese/snr10_20_dev/",
+                "/data/data/datasets_KWS/data_feature/English/snr10_20_dev/",
+                "/data/data/datasets_KWS/data_feature/take_a_photo_clean/snr-20_20dev/",
+                "/data/data/datasets_KWS/data_feature/record_a_video_clean/snr-20_20dev/",
+                "/data/data/datasets_KWS/data_feature/heymemo_noisy/snr0_20_dev/",
+               "/data/data/datasets_KWS/data_feature/heymemo_negative_noisy/snr0_20_dev/"
+              ],
+        "valid_len_array" : [30,10,10,10,20,20,20,30]
+    },
+    "optimizer":
+    {
+        "lr": 0.0001
+    },
+    
+    "train":
+    {
+        "target_class": ["other", "heymemo"],
+        "gpu_id": '1',
+        "epoch": 100,
+        "batch_size": 1024,
+        "feature_pickle_size": 4096,
+        
+        "checkpoint_path": "checkpoint_test",
+        "log_file_path": "log",
+
+        "resume": false,
+        "resume_checkpoint_file": "./checkpoint_test/model_epoch99.pt",
+
+        "knowledge_distill": false,
+        "teacher_checkpoint_file": "./checkpoint_test/model_epoch99.pt"
+    }
+}
