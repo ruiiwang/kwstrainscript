@@ -77,6 +77,7 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
     
     log_message('训练完成!')
     log_file.close()
+    torch.save(model.state_dict(), 'crnn_model.pth')
 
 if __name__ == "__main__":
     # 加载数据
@@ -86,5 +87,5 @@ if __name__ == "__main__":
     model = CnnRnnModel1Channel(config)
     
     # 开始训练
-    train_model(model, features, labels)
+    train_model(model, features, labels, epochs=50, batch_size=64)
     
