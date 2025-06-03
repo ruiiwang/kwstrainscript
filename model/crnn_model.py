@@ -47,7 +47,7 @@ class CnnRnnModel1Channel(torch.nn.Module):
 
 
     def forward(self, input):
-        input = input.transpose(1, 2)
+        # input = input.transpose(1, 2) # 移除此行
         conv_out = self.conv(input)
         conv_out = conv_out.transpose(1, 2)
         rnn_out, h = self.rnn(conv_out)

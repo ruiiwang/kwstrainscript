@@ -1,7 +1,7 @@
 import pickle
 import numpy as np
 
-with open('converted_LookAnd_features.pkl', 'rb') as f:
+with open('converted_pickle/converted_LookAnd_features.pkl', 'rb') as f:
     data = pickle.load(f)
 
 # 查看总项数
