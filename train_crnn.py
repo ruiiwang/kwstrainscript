@@ -14,7 +14,7 @@ config = {
         {"out_c": 64, "k": 8, "s": 2, "p":3, "dropout": 0.0}
     ],
     "rnn": {"dim": 64, "layers": 1, "dropout": 0.25, "bidirectional": True},
-    "fc_out": 11  # 11个类别
+    "fc_out":  8 # 8个类别
 }
 
 # 初始化日志文件
@@ -140,5 +140,5 @@ if __name__ == "__main__":
     model = CnnRnnModel1Channel(config)
     
     # 开始训练
-    train_model(model, features, labels, epochs=30, batch_size=1024)
+    train_model(model, features, labels, epochs=50, batch_size=1024)
     
