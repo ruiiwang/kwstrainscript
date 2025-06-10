@@ -6,34 +6,21 @@ import os
 keywords_dict = {
     'UNKNOWN_WORD': 0,
     'HeyMemo': 1,
-    'Next': 2,
+    'LookAnd': 2,
     'Pause': 3,
     'Play': 4,
     'StopRecording': 5,
     'TakeAPicture': 6,
     'TakeAVideo': 7,
-    'VolumeDown': 8,
-    'VolumeUp': 9,
-    'LookAnd': 10
 }
 
-# 文件列表
-file_list = [
-    'HeyMemo_features.pkl',
-    'Next_features.pkl',
-    'LookAnd_features.pkl',
-    'Pause_features.pkl',
-    'Play_features.pkl',
-    'StopRecording_features.pkl',
-    'TakeAPicture_features.pkl',
-    'TakeAVideo_features.pkl',
-    'UNKNOWN_WORD_features.pkl',
-    'VolumeDown_features.pkl',
-    'VolumeUp_features.pkl'
-]
+# 原始文件所在目录
+input_dir = 'origin_pickle'  # 修改为你的原始文件目录
+
+# 获取目录下所有pkl文件
+file_list = [f for f in os.listdir(input_dir) if f.endswith('.pkl')]
 
 # 从文件名提取关键词并生成标签
-# 这里假设文件名格式为"keyword_xxx.pkl"，实际应根据您的文件名格式调整
 def get_label_from_filename(filename):
     for keyword in keywords_dict:
         if keyword.lower() in filename.lower():
@@ -42,7 +29,7 @@ def get_label_from_filename(filename):
 
 # 处理每个文件并单独保存
 for file in file_list:
-    with open(file, 'rb') as f:
+    with open(os.path.join(input_dir, file), 'rb') as f:  # 使用完整路径
         data = pickle.load(f)
     
     # 获取标签
@@ -58,8 +45,11 @@ for file in file_list:
     # 生成输出文件名
     output_file = f"converted_{file}"
     
+    # 确保输出目录存在
+    os.makedirs('converted_pickle', exist_ok=True)
+    
     # 保存转换后的数据
-    with open(output_file, 'wb') as f:
+    with open(os.path.join('converted_pickle', output_file), 'wb') as f:
         pickle.dump(output_data, f)
     
     # 打印处理信息

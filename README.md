@@ -9,38 +9,33 @@
 - 语音关键词分类
 
 ## 文件结构
-├── converted_pickle/    # 转换后的特征数据
+├── converted_pickle/    # 转换后的特征数据（11类）
+├── converted_pickle2/   # 转换后的特征数据（8类）
 ├── model/               # 模型定义
 │   ├── crnn_model.py    # CRNN模型实现
 │   └── rnn_cells/       # 自定义RNN单元
-├── origin_pickle/       # 原始特征数据
-├── train_crnn.py       # 训练脚本
-├── crnn_model.pth      # 训练好的模型
-└── training_log.txt    # 训练日志
+├── origin_pickle/       # 原始特征数据（11类）
+├── origin_pickle2/      # 原始特征数据（8类）
+├── so_mfcc.py           # 音频特征提取代码
+├── test_model.py        # 测试脚本
+├── train_crnn.py        # 训练脚本
+├── crnn_model.pth       # 训练好的模型
+├── 8class_model.pth     # 训练好的模型（8类）
+└── training_log.txt     # 训练日志
 
 ## 快速开始
 1. 训练模型
 ```
 python train_crnn.py
 ```
-2. 使用训练好的模型
+
+2. 测试模型
 ```
-from model.crnn_model import CnnRnnModel1Channel
-import torch
-
-# 加载模型
-model = CnnRnnModel1Channel(config)
-model.load_state_dict(torch.load('crnn_model.pth'))
-model.eval()
-
-# 输入数据应为形状(batch_size, 100, 16)的tensor
-with torch.no_grad():
-    output = model(input_data)
-    predicted_class = torch.argmax(output).item()
+python test_model.py
 ```
 
 ## 训练数据
-- 11个关键词类别
+- 8个关键词类别（已更新），1.6s 16000Hz 单通道wav音频
 - 每个关键词对应的MFCC特征存储在pickle文件中
 
 ## 输出说明

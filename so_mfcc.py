@@ -7,5 +7,5 @@ mfcc_data = mfcc(y=audio_data, sr=16000, n_mfcc=16, n_mels=40, S=None, norm=None
                            win_length=512, window='hamming', hop_length=256, n_fft=512,
                            fmin=20, fmax=4050, center=False, power=1, htk=True, dct_type=2, lifter=0,
                            scale_exp=15)
-print(mfcc_data.shape)
-print(mfcc_data)
+# print(mfcc_data.shape)
+# print(mfcc_data)

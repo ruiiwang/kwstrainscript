@@ -14,7 +14,7 @@ config = {
         {"out_c": 64, "k": 8, "s": 2, "p":3, "dropout": 0.0}
     ],
     "rnn": {"dim": 64, "layers": 1, "dropout": 0.25, "bidirectional": True},
-    "fc_out":  8 # 8个类别
+    "fc_out": 11  # 11个类别
 }
 
 # 初始化日志文件
@@ -63,10 +63,10 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
     
-    log_message(f'总样本数: {dataset_size}')
-    log_message(f'训练集: {train_size}, 验证集: {val_size}, 测试集: {test_size}')
-    
-    best_val_acc = 0.0
+    log_message('开始训练...')
+    log_message(f'总样本数: {len(features)}')
+    log_message(f'批量大小: {batch_size}')
+    log_message(f'训练周期: {epochs}')
     
     for epoch in range(epochs):
         model.train()
@@ -79,55 +79,19 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = criterion(outputs, targets)
+            
             loss.backward()
             optimizer.step()
             
-            train_loss += loss.item()
+            running_loss += loss.item()
             _, predicted = outputs.max(1)
-            train_total += targets.size(0)
-            train_correct += predicted.eq(targets).sum().item()
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
         
-        # 验证阶段
-        model.eval()
-        val_loss = 0.0
-        val_correct = 0
-        val_total = 0
-        
-        with torch.no_grad():
-            for inputs, targets in val_loader:
-                outputs = model(inputs)
-                loss = criterion(outputs, targets)
-                val_loss += loss.item()
-                _, predicted = outputs.max(1)
-                val_total += targets.size(0)
-                val_correct += predicted.eq(targets).sum().item()
-        
-        train_loss = train_loss / len(train_loader)
-        train_acc = 100. * train_correct / train_total
-        val_loss = val_loss / len(val_loader)
-        val_acc = 100. * val_correct / val_total
-        
-        log_message(f'Epoch {epoch+1}/{epochs} Train Loss: {train_loss:.4f} Acc: {train_acc:.2f}% Val Loss: {val_loss:.4f} Acc: {val_acc:.2f}%')
-        
-        # 保存最佳模型
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            torch.save(model.state_dict(), 'crnn_model_best.pth')
+        epoch_loss = running_loss / len(dataloader)
+        epoch_acc = 100. * correct / total
+        log_message(f'Epoch {epoch+1}/{epochs} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.2f}%')
     
-    # 测试阶段
-    model.eval()
-    test_correct = 0
-    test_total = 0
-    
-    with torch.no_grad():
-        for inputs, targets in test_loader:
-            outputs = model(inputs)
-            _, predicted = outputs.max(1)
-            test_total += targets.size(0)
-            test_correct += predicted.eq(targets).sum().item()
-    
-    test_acc = 100. * test_correct / test_total
-    log_message(f'测试集准确率: {test_acc:.2f}%')
     log_message('训练完成!')
     log_file.close()
     torch.save(model.state_dict(), 'crnn_model.pth')
@@ -140,5 +104,5 @@ if __name__ == "__main__":
     model = CnnRnnModel1Channel(config)
     
     # 开始训练
-    train_model(model, features, labels, epochs=50, batch_size=1024)
+    train_model(model, features, labels, epochs=50, batch_size=64)
     

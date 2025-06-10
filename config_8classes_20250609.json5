@@ -28,21 +28,21 @@
     },
 
     "training": {
-        "epochs": 30,
+        "epochs": 50,
         "batch_size": 1024,
         "checkpoint_path": "./",
-        "model_name": "crnn_model.pth",
+        "model_name": "8class_model.pth",
         "criterion": "CrossEntropyLoss"
     },
 
     "classes": [
-        "HeyMemo",
-        "LookAnd",
-        "Pause",
-        "Play",
-        "StopRecording",
-        "TakeAPicture",
-        "TakeAVideo",
-        "UNKNOWN_WORD",
+        'UNKNOWN_WORD': 0,
+        'HeyMemo': 1,
+        'LookAnd': 2,
+        'Pause': 3,
+        'Play': 4,
+        'StopRecording': 5,
+        'TakeAPicture': 6,
+        'TakeAVideo': 7,
     ]
 }
