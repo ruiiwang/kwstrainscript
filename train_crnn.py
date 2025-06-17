@@ -14,7 +14,7 @@ config = {
         {"out_c": 64, "k": 8, "s": 2, "p":3, "dropout": 0.0}
     ],
     "rnn": {"dim": 64, "layers": 1, "dropout": 0.25, "bidirectional": True},
-    "fc_out": 11  # 11个类别
+    "fc_out": 8  # 8个类别
 }
 
 # 初始化日志文件
@@ -43,7 +43,7 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
     dataset_size = len(features)
     train_size = int(0.6 * dataset_size)
     val_size = int(0.2 * dataset_size)
-    test_size = dataset_size - train_size - val_size
+    # test_size = dataset_size - train_size - val_size
     
     # 随机划分
     indices = torch.randperm(dataset_size)
@@ -57,8 +57,8 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
     test_dataset = TensorDataset(features[test_indices], labels[test_indices])
     
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size)
+    # val_loader = DataLoader(val_dataset, batch_size=batch_size)
+    # test_loader = DataLoader(test_dataset, batch_size=batch_size)
     
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
@@ -68,11 +68,18 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
     log_message(f'批量大小: {batch_size}')
     log_message(f'训练周期: {epochs}')
     
+    best_loss = float('inf')
+    best_model = None
+    
+    # 确保checkpoint目录存在
+    if not os.path.exists('checkpoint'):
+        os.makedirs('checkpoint')
+
     for epoch in range(epochs):
         model.train()
-        train_loss = 0.0
-        train_correct = 0
-        train_total = 0
+        running_loss = 0.0
+        correct = 0
+        total = 0
         
         # 训练阶段
         for inputs, targets in train_loader:
@@ -88,21 +95,39 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
         
-        epoch_loss = running_loss / len(dataloader)
+        epoch_loss = running_loss / len(train_loader)
         epoch_acc = 100. * correct / total
         log_message(f'Epoch {epoch+1}/{epochs} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.2f}%')
+        
+        # 保存checkpoint
+        checkpoint_dict = {
+            "epoch": epoch+1,
+            "loss": epoch_loss,
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict()
+        }
+        torch.save(checkpoint_dict, f'checkpoint/epoch{epoch+1}.pth')
+        
+        # 更新最佳模型
+        if epoch_loss < best_loss:
+            best_loss = epoch_loss
+            best_model = model.state_dict()
+            torch.save(best_model, 'checkpoint/crnn_model_best.pth')
+            log_message(f'New best model saved with loss: {best_loss:.4f}')
     
     log_message('训练完成!')
     log_file.close()
-    torch.save(model.state_dict(), 'crnn_model.pth')
+    
+    # 删除原来的保存最终模型的代码
+    # torch.save(model.state_dict(), 'crnn_model.pth')  # 这行已被删除
 
 if __name__ == "__main__":
     # 加载数据
-    features, labels = load_all_pkls('converted_pickle')
+    features, labels = load_all_pkls('converted_pickle2')
     
     # 创建模型
     model = CnnRnnModel1Channel(config)
     
     # 开始训练
-    train_model(model, features, labels, epochs=50, batch_size=64)
+    train_model(model, features, labels, epochs=30, batch_size=64)
     

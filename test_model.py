@@ -44,6 +44,7 @@ def extract_features(wav_path):
     return torch.FloatTensor(mfcc_data)
 
 def test_folder(model, folder_path, class_names):
+    threshold = 0.9  # 可调整的阈值
     # 统计每类结果
     class_stats = {class_id: {'correct':0, 'total':0} for class_id in class_names}
     
@@ -69,8 +70,13 @@ def test_folder(model, folder_path, class_names):
                         # 预测
                         with torch.no_grad():
                             outputs = model(features)
-                            _, predicted = torch.max(outputs, 1)
-                            predicted_class = predicted.item()
+                            # _, predicted = torch.max(outputs, 1)
+                            # predicted_class = predicted.item()
+
+                            probs = torch.softmax(outputs, 1)  # 将输出转换为概率
+                            max_prob, predicted = torch.max(probs, 1)
+                            # 添加阈值判断
+                            predicted_class = predicted.item() if max_prob > threshold else 0  # 0对应UNKNOWN_WORD
                         
                         # 更新统计
                         class_stats[true_class]['total'] += 1
@@ -80,18 +86,18 @@ def test_folder(model, folder_path, class_names):
                         print(f"Error processing {file}: {e}")  # 使用file变量
     
     # 打印每类精度
-    print(f"{'Class':<15} {'Accuracy':<10} {'Correct/Total'}")
-    print("-" * 40)
+    # 打印每类精度和误识别率
+    print(f"{'Class':<15} {'Accuracy':<10} {'False Rate':<10} {'Correct/Total'}")
+    print("-" * 50)
     for class_id, stats in class_stats.items():
         if stats['total'] > 0:
             acc = 100. * stats['correct'] / stats['total']
-            print(f"{class_names[class_id]:<15} {acc:.2f}%     {stats['correct']}/{stats['total']}")
+            false_rate = 100. * (stats['total'] - stats['correct']) / stats['total']
+            print(f"{class_names[class_id]:<15} {acc:.2f}%     {false_rate:.2f}%     {stats['correct']}/{stats['total']}")
 
 if __name__ == "__main__":
     # 加载模型
     model = load_model('8class_model_best.pth')
     
     # 测试指定文件夹
-    test_folder(model, '/mnt/d/project/beskws_tool_release3.4/datas/edgetts_generated/', class_names)
-    test_folder(model, '/mnt/d/project/beskws_tool_release3.4/datas/orpheus_generated/', class_names)
-    test_folder(model, '/mnt/d/project/beskws_tool_release3.4/datas/human_modified_153/', class_names)
+    test_folder(model, '/mnt/d/project/1.6svoice/', class_names)
