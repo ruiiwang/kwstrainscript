@@ -30,7 +30,12 @@ class_names = {
 
 def load_model(model_path):
     model = CnnRnnModel1Channel(config)
-    model.load_state_dict(torch.load(model_path))
+    # 修改此处，加载整个检查点字典，然后提取model_state_dict
+    try:
+        model.load_state_dict(torch.load(model_path))
+    except KeyError:
+        checkpoint = torch.load(model_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
     return model
 

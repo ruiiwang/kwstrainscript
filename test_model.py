@@ -29,7 +29,12 @@ class_names = {
 
 def load_model(model_path):
     model = CnnRnnModel1Channel(config)
-    model.load_state_dict(torch.load(model_path))
+    # 修改此处，加载整个检查点字典，然后提取model_state_dict
+    try:
+        model.load_state_dict(torch.load(model_path))
+    except KeyError:
+        checkpoint = torch.load(model_path)
+        model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
     return model
 
@@ -97,7 +102,7 @@ def test_folder(model, folder_path, class_names):
 
 if __name__ == "__main__":
     # 加载模型
-    model = load_model('8class_model_best.pth')
+    model = load_model('checkpoint2/crnn_model_best.pth')
     
     # 测试指定文件夹
     test_folder(model, '/mnt/d/project/1.6svoice/', class_names)
