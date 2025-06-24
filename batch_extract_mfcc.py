@@ -5,11 +5,11 @@ import torch
 import numpy as np
 from mfcc_io import mfcc
 
-def process_folder(input_dir):
+def process_folder(input_dir, pattern=None):
     features_list = []
     for root, _, files in os.walk(input_dir):
         for file in files:
-            if file.endswith('.wav'):
+            if file.endswith('.wav') and (pattern is None or pattern in file):
                 file_path = os.path.join(root, file)
                 audio_data = librosa.load(file_path, sr=16000)[0]
                 mfcc_feat = mfcc(
@@ -32,25 +32,30 @@ def process_folder(input_dir):
 
 if __name__ == '__main__':
     input_folders = [
-        '/mnt/d/project/1.6svoice/HeyMemo',
-        '../1.6svoice/LookAnd',
-        '../1.6svoice/Next',
-        '../1.6svoice/Pause',
-        '../1.6svoice/Play',
-        '../1.6svoice/StopRecording',
-        '../1.6svoice/TakeAPicture',
-        '../1.6svoice/TakeAVideo',
-        '../1.6svoice/UNKNOWN_WORD',
-        '../1.6svoice/VolumeDown',
-        '../1.6svoice/VolumeUp',
+        # '/mnt/d/project/1.6svoice/HeyMemo',
+        # '/mnt/d/1.6svoice/LookAnd',
+        # '/mnt/d/1.6svoice/Next',
+        # '/mnt/d/1.6svoice/Pause',
+        # '/mnt/d/1.6svoice/Play',
+        # '/mnt/d/1.6svoice/StopRecording',
+        # '/mnt/d/1.6svoice/TakeAPicture',
+        # '/mnt/d/1.6svoice/TakeAVideo',
+        # '/mnt/d/1.6svoice/UNKNOWN_WORD',
+        # '/mnt/d/1.6svoice/VolumeDown',
+        # '/mnt/d/1.6svoice/VolumeUp',
+        '/mnt/f/wrong_segments',
     ]
+    
+    # 添加文件名模式参数，例如只处理包含"20250611"的文件
+    file_pattern = "2_2025"
     
     for folder in input_folders:
         folder_name = os.path.basename(folder)
-        output_file = f'{folder_name}_features.pkl'
+        # output_file = f'{folder_name}_features.pkl'
+        output_file = 'origin_pickle2/UNKNOWN_WORD_features_2.pkl'
         
         print(f'正在处理文件夹: {folder}')
-        features = process_folder(folder)
+        features = process_folder(folder, pattern=file_pattern)
         
         with open(output_file, 'wb') as f:
             pickle.dump(features, f)

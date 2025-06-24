@@ -2,7 +2,7 @@ import os
 import torch
 import librosa
 from model.crnn_model import CnnRnnModel1Channel
-from so_mfcc import mfcc
+from mfcc_io import mfcc
 
 # 模型配置(需与训练时一致)
 config = {
@@ -102,7 +102,7 @@ def test_folder(model, folder_path, class_names):
 
 if __name__ == "__main__":
     # 加载模型
-    model = load_model('checkpoint2/crnn_model_best.pth')
+    model = load_model('checkpoint/crnn_model_best.pth')
     
     # 测试指定文件夹
-    test_folder(model, '/mnt/d/project/1.6svoice/', class_names)
+    test_folder(model, '/mnt/d/human_modified_153', class_names)
