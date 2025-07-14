@@ -4,7 +4,7 @@ import librosa
 import soundfile as sf
 from datetime import datetime
 from model.crnn_model import CnnRnnModel1Channel
-from so_mfcc import mfcc
+from mfcc_io import mfcc
 
 # 模型配置(与test_model.py一致)
 config = {
@@ -39,15 +39,18 @@ def load_model(model_path):
     model.eval()
     return model
 
-def process_audio(model, wav_path, output_dir, log_file):
+def process_audio(model, wav_path, output_dir, log_file, last_wakeup_audio_time):
     # 参数设置
     sr = 16000
     window_length = 1.6  # 秒
-    hop_length = 0.02    # 秒
+    hop_length = 0.1    # 秒
     threshold = 0.7
+    min_interval = 1.6   # 最小间隔时间，单位秒
     
     # 加载音频
     audio, _ = librosa.load(wav_path, sr=sr)
+    # 添加音量归一化
+    audio = librosa.util.normalize(audio, norm=2)
     
     # 计算采样点数
     window_samples = int(window_length * sr)
@@ -66,9 +69,6 @@ def process_audio(model, wav_path, output_dir, log_file):
         # 预测
         with torch.no_grad():
             outputs = model(features)
-            # _, predicted = torch.max(outputs, 1)
-            # predicted_class = predicted.item()
-
             probs = torch.softmax(outputs, 1)  # 将输出转换为概率
             max_prob, predicted = torch.max(probs, 1)
             # 添加阈值判断
@@ -76,6 +76,11 @@ def process_audio(model, wav_path, output_dir, log_file):
             
         # 如果不是UNKNOWN_WORD则保存片段
         if predicted_class != 0:
+            current_audio_time = i / sr # 当前唤醒在音频中的时间点
+            # 检查与上次唤醒的时间间隔
+            if (current_audio_time - last_wakeup_audio_time) < min_interval:
+                continue # 如果间隔太短，则跳过本次唤醒
+
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
             output_path = os.path.join(output_dir, 
                                      f"{predicted_class}_{timestamp}.wav")
@@ -84,27 +89,41 @@ def process_audio(model, wav_path, output_dir, log_file):
             # 记录日志
             with open(log_file, 'a') as f:
                 f.write(f"{wav_path} -> {output_path} ({class_names[predicted_class]})\n")
+            last_wakeup_audio_time = current_audio_time # 更新上次唤醒时间
+    return last_wakeup_audio_time
 
 def process_folder(model, input_dir, output_dir, log_file):
     # 确保输出目录存在
     os.makedirs(output_dir, exist_ok=True)
     
+    # 初始化上次唤醒时间为0，确保第一次唤醒能被记录
+    last_wakeup_audio_time = 0.0
+
     # 遍历所有wav文件
     for root, _, files in os.walk(input_dir):
         for file in files:
             if file.lower().endswith('.wav'):
                 wav_path = os.path.join(root, file)
-                process_audio(model, wav_path, output_dir, log_file)
+                # 对于每个新的音频文件，重置 last_wakeup_audio_time
+                last_wakeup_audio_time = 0.0 
+                last_wakeup_audio_time = process_audio(model, wav_path, output_dir, log_file, last_wakeup_audio_time)
 
 if __name__ == "__main__":
     # 加载模型
-    model = load_model('8class_model_best.pth')
+    model = load_model('checkpoint1/crnn_model_best.pth')
     
     # 设置路径
-    input_folder = '/mnt/d/project/voxceleb_trainer/data/voxceleb1/'  # 输入文件夹
+    input_folder = '/mnt/f/voxceleb_data/voxceleb1/'  # 输入文件夹
+    # input_folder = '/mnt/f/voiceprint_2/'
     # 已经提取完成了id10122的部分
-    output_folder = './wrong_segments/'     # 输出文件夹
+    # 第二部分：id10123-id10471
+    output_folder = '/mnt/f/wrong_segments/'     # 输出文件夹
     log_file = './prediction.log'           # 日志文件
     
     # 处理文件夹
-    process_folder(model, input_folder, output_folder, log_file)
+    # process_folder(model, input_folder, output_folder, log_file)
+    for i in range(11001, 12000): # 包含11000
+        input_folders = os.path.join(input_folder, f'id{i}')
+        print(f"Processing folder: {input_folders}")
+        # 处理文件夹
+        process_folder(model, input_folders, output_folder, log_file)

@@ -84,7 +84,7 @@ def test_pkl_data(model, pkl_path, class_names):
         # 统计真实类别与预测类别的分布
         true_predicted_distribution[class_names[true_label]][class_names[predicted_class]] += 1
         
-        print(f"Sample {i+1}: True Class: {class_names[true_label]}, Predicted Class: {class_names[predicted_class]}, Probability: {max_prob.item():.4f}")
+        # print(f"Sample {i+1}: True Class: {class_names[true_label]}, Predicted Class: {class_names[predicted_class]}, Probability: {max_prob.item():.4f}")
 
     accuracy = (correct_predictions / total_predictions) * 100 if total_predictions > 0 else 0
     print(f"Overall Accuracy: {accuracy:.2f}% ({correct_predictions}/{total_predictions})")
@@ -114,7 +114,7 @@ def test_pkl_data(model, pkl_path, class_names):
 
 if __name__ == "__main__":
     # 加载模型
-    model = load_model('8class_model_best.pth')
+    model = load_model('checkpoint1/crnn_model_best.pth')
     
     # 测试指定pkl文件
-    test_pkl_data(model, 'heymemo_devcombine.pkl', class_names)
+    test_pkl_data(model, 'converted_pickle2/converted_HeyMemo_features.pkl', class_names)

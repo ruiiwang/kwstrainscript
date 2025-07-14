@@ -17,10 +17,7 @@ config = {
     "fc_out": 8  # 8个类别
 }
 
-# 初始化日志文件
-log_file = open('training_log.txt', 'w')
-
-def log_message(message):
+def log_message(message, log_file):
     print(message)
     log_file.write(message + '\n')
     log_file.flush()
@@ -38,7 +35,7 @@ def load_all_pkls(pkl_dir):
                 labels.append(data[1].long())
     return torch.cat(features), torch.cat(labels)
 
-def train_model(model, features, labels, epochs=10, batch_size=32):
+def train_model(model, features, labels, epochs=10, batch_size=32, folder='checkpoint', resume_checkpoint=None):
     # 划分数据集: 60%训练集, 20%验证集, 20%测试集
     dataset_size = len(features)
     train_size = int(0.6 * dataset_size)
@@ -61,21 +58,35 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
     # test_loader = DataLoader(test_dataset, batch_size=batch_size)
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters())
-    
-    log_message('开始训练...')
-    log_message(f'总样本数: {len(features)}')
-    log_message(f'批量大小: {batch_size}')
-    log_message(f'训练周期: {epochs}')
-    
-    best_loss = float('inf')
-    best_model = None
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
     
     # 确保checkpoint目录存在
-    if not os.path.exists('checkpoint'):
-        os.makedirs('checkpoint')
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    # 初始化日志文件
+    log_file = open(os.path.join(folder, 'training_log.txt'), 'a')
+    start_epoch = 0
+    best_loss = float('inf')
 
-    for epoch in range(epochs):
+    if resume_checkpoint and os.path.exists(resume_checkpoint):
+        log_message(f'从检查点 {resume_checkpoint} 恢复训练...', log_file)
+        checkpoint = torch.load(resume_checkpoint)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        start_epoch = checkpoint['epoch']
+        best_loss = checkpoint['loss']
+        log_message(f'从 Epoch {start_epoch + 1} 开始训练，上次最佳损失: {best_loss:.4f}', log_file)
+    else:
+        log_message('开始训练...', log_file)
+        log_message(f'总样本数: {len(features)}', log_file)
+        log_message(f'batch_size: {batch_size}', log_file)
+        log_message(f'训练周期: {epochs}', log_file)
+
+    # 确保checkpoint目录存在
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    for epoch in range(start_epoch, epochs):
         model.train()
         running_loss = 0.0
         correct = 0
@@ -97,7 +108,7 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
         
         epoch_loss = running_loss / len(train_loader)
         epoch_acc = 100. * correct / total
-        log_message(f'Epoch {epoch+1}/{epochs} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.2f}%')
+        log_message(f'Epoch {epoch+1}/{epochs}, Loss: {epoch_loss:.4f}, Acc: {epoch_acc:.2f}%', log_file)
         
         # 保存checkpoint
         checkpoint_dict = {
@@ -106,16 +117,16 @@ def train_model(model, features, labels, epochs=10, batch_size=32):
             "model_state_dict": model.state_dict(),
             "optimizer_state_dict": optimizer.state_dict()
         }
-        torch.save(checkpoint_dict, f'checkpoint/epoch{epoch+1}.pth')
+        torch.save(checkpoint_dict, f'{folder}/epoch{epoch+1}.pth')
         
         # 更新最佳模型
         if epoch_loss < best_loss:
             best_loss = epoch_loss
             best_model = model.state_dict()
-            torch.save(best_model, 'checkpoint/crnn_model_best.pth')
-            log_message(f'New best model saved with loss: {best_loss:.4f}')
+            torch.save(best_model, f'{folder}/crnn_model_best.pth')
     
-    log_message('训练完成!')
+    log_message(f'Best model saved with loss: {best_loss:.4f}', log_file)
+    log_message('训练完成!', log_file)
     log_file.close()
     
     # 删除原来的保存最终模型的代码
@@ -128,6 +139,9 @@ if __name__ == "__main__":
     # 创建模型
     model = CnnRnnModel1Channel(config)
     
+    # 设置要恢复的检查点路径，如果没有则设置为 None
+    resume_checkpoint_path = 'checkpoint1/epoch50.pth' # 例如: 'checkpoint1/epoch15.pth'
+
     # 开始训练
-    train_model(model, features, labels, epochs=30, batch_size=64)
+    train_model(model, features, labels, epochs=75, batch_size=16, folder='checkpoint1', resume_checkpoint=resume_checkpoint_path)
     
