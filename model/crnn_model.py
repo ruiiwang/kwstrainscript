@@ -59,11 +59,13 @@ class CnnRnnModel1Channel(torch.nn.Module):
 
 
 if __name__ == "__main__":
-    config = {"in_c" : 16,
-              "conv": [{"out_c": 32, "k": 16, "s": 2, "p":5, "dropout": 0.0},
-                       {"out_c": 64, "k": 8, "s": 2, "p":3, "dropout": 0.0}],
-              "rnn": {"dim": 64, "layers": 1, "dropout": 0.25, "bidirectional": True},
-              "fc_out" : 2}
+    config = {
+        "in_c": 16,
+        "conv": [{"out_c": 16, "k": 8, "s": 2, "p": 1, "dropout": 0.0},
+                {"out_c": 32, "k": 4, "s": 2, "p": 1, "dropout": 0.0}],
+        "rnn": {"dim": 32, "layers": 1, "dropout": 0.2, "bidirectional": True},
+        "fc_out": 8
+    }
     net = CnnRnnModel1Channel(config)
     data = torch.ones((4096, 100, 16))
     out = net(data)

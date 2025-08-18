@@ -47,12 +47,13 @@ if __name__ == '__main__':
     ]
     
     # 添加文件名模式参数，例如只处理包含"20250611"的文件
-    file_pattern = "2_2025"
+    file_pattern = None
+    # file_pattern = "2_2025"
     
     for folder in input_folders:
         folder_name = os.path.basename(folder)
         # output_file = f'{folder_name}_features.pkl'
-        output_file = 'origin_pickle2/UNKNOWN_WORD_features_2.pkl'
+        output_file = 'origin_pickle2/UNKNOWN_WORD_features_new.pkl'
         
         print(f'正在处理文件夹: {folder}')
         features = process_folder(folder, pattern=file_pattern)

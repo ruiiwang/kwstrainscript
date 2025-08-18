@@ -7,14 +7,19 @@ from torch.utils.data import DataLoader, TensorDataset
 from model.crnn_model import CnnRnnModel1Channel
 
 # 模型配置
+# config = {
+#     "in_c": 16,
+#     "conv": [{"out_c": 32, "k": 16, "s": 2, "p":5, "dropout": 0.0},
+#              {"out_c": 64, "k": 8, "s": 2, "p":3, "dropout": 0.0}],
+#     "rnn": {"dim": 64, "layers": 1, "dropout": 0.25, "bidirectional": True},
+#     "fc_out": 8  # 8个类别
+# }
 config = {
     "in_c": 16,
-    "conv": [
-        {"out_c": 32, "k": 16, "s": 2, "p":5, "dropout": 0.0},
-        {"out_c": 64, "k": 8, "s": 2, "p":3, "dropout": 0.0}
-    ],
-    "rnn": {"dim": 64, "layers": 1, "dropout": 0.25, "bidirectional": True},
-    "fc_out": 8  # 8个类别
+    "conv": [{"out_c": 16, "k": 8, "s": 2, "p": 1, "dropout": 0.0},
+            {"out_c": 32, "k": 4, "s": 2, "p": 1, "dropout": 0.0}],
+    "rnn": {"dim": 32, "layers": 1, "dropout": 0.2, "bidirectional": True},
+    "fc_out": 8
 }
 
 def log_message(message, log_file):
@@ -22,17 +27,23 @@ def log_message(message, log_file):
     log_file.write(message + '\n')
     log_file.flush()
 
-# 加载所有pkl文件
-def load_all_pkls(pkl_dir):
+# 加载所有pkl文件，支持从多个目录加载
+def load_all_pkls(pkl_dirs):
     features = []
     labels = []
-    for pkl_file in os.listdir(pkl_dir):
-        if pkl_file.endswith('.pkl'):
-            with open(os.path.join(pkl_dir, pkl_file), 'rb') as f:
-                data = pickle.load(f)
-                feat = data[0]
-                features.append(feat)
-                labels.append(data[1].long())
+    for pkl_dir in pkl_dirs:
+        if not os.path.exists(pkl_dir):
+            log_message(f"警告: 目录 {pkl_dir} 不存在，跳过加载。", None)
+            continue
+        for pkl_file in os.listdir(pkl_dir):
+            if pkl_file.endswith('.pkl'):
+                with open(os.path.join(pkl_dir, pkl_file), 'rb') as f:
+                    data = pickle.load(f)
+                    feat = data[0]
+                    features.append(feat)
+                    labels.append(data[1].long())
+    if not features:
+        raise ValueError("没有找到任何pkl文件，请检查目录设置。")
     return torch.cat(features), torch.cat(labels)
 
 def train_model(model, features, labels, epochs=10, batch_size=32, folder='checkpoint', resume_checkpoint=None):
@@ -133,15 +144,19 @@ def train_model(model, features, labels, epochs=10, batch_size=32, folder='check
     # torch.save(model.state_dict(), 'crnn_model.pth')  # 这行已被删除
 
 if __name__ == "__main__":
+    # 设置要加载的pkl文件目录列表
+    # 您可以将新的pkl文件目录添加到这个列表中
+    pkl_data_dirs = ['converted_pickle2'] # 添加您的新数据目录
+    
     # 加载数据
-    features, labels = load_all_pkls('converted_pickle2')
+    features, labels = load_all_pkls(pkl_data_dirs)
     
     # 创建模型
     model = CnnRnnModel1Channel(config)
     
     # 设置要恢复的检查点路径，如果没有则设置为 None
-    resume_checkpoint_path = 'checkpoint1/epoch50.pth' # 例如: 'checkpoint1/epoch15.pth'
+    resume_checkpoint_path = None # 例如: 'checkpoint1/epoch15.pth'
 
     # 开始训练
-    train_model(model, features, labels, epochs=75, batch_size=16, folder='checkpoint1', resume_checkpoint=resume_checkpoint_path)
+    train_model(model, features, labels, epochs=100, batch_size=64, folder='checkpoint3', resume_checkpoint=resume_checkpoint_path)
     

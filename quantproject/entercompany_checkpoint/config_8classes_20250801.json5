@@ -28,14 +28,14 @@
         "criterion": "CrossEntropyLoss"
     },
 
-    "classes": [
-        'UNKNOWN_WORD': 0,
-        'HeyMemo': 1,
-        'LookAnd': 2,
-        'Pause': 3,
-        'Play': 4,
-        'StopRecording': 5,
-        'TakeAPicture': 6,
-        'TakeAVideo': 7,
-    ]
+    "classes": {
+        "UNKNOWN_WORD": 0,
+        "HeyMemo": 1,
+        "LookAnd": 2,
+        "Pause": 3,
+        "Play": 4,
+        "StopRecording": 5,
+        "TakeAPicture": 6,
+        "TakeAVideo": 7,
+    }
 }

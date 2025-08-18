@@ -1,7 +1,7 @@
 import pickle
 import numpy as np
 
-with open('heymemo_devcombine.pkl', 'rb') as f:
+with open('converted_8/converted_HeyMemo_features.pkl', 'rb') as f:
     data = pickle.load(f)
 
 # 查看总项数

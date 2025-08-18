@@ -9,12 +9,10 @@ from mfcc_io import mfcc
 # 模型配置(与test_model.py一致)
 config = {
     "in_c": 16,
-    "conv": [
-        {"out_c": 32, "k": 16, "s": 2, "p":5, "dropout": 0.0},
-        {"out_c": 64, "k": 8, "s": 2, "p":3, "dropout": 0.0}
-    ],
-    "rnn": {"dim": 64, "layers": 1, "dropout": 0.25, "bidirectional": True},
-    "fc_out": 8  # 8个类别
+    "conv": [{"out_c": 16, "k": 8, "s": 2, "p": 1, "dropout": 0.0},
+                {"out_c": 32, "k": 4, "s": 2, "p": 1, "dropout": 0.0}],
+    "rnn": {"dim": 32, "layers": 1, "dropout": 0.2, "bidirectional": True},
+    "fc_out": 8
 }
 
 class_names = {
@@ -110,19 +108,19 @@ def process_folder(model, input_dir, output_dir, log_file):
 
 if __name__ == "__main__":
     # 加载模型
-    model = load_model('checkpoint1/crnn_model_best.pth')
+    model = load_model('checkpoint2/crnn_model_best.pth')
     
     # 设置路径
     input_folder = '/mnt/f/voxceleb_data/voxceleb1/'  # 输入文件夹
     # input_folder = '/mnt/f/voiceprint_2/'
     # 已经提取完成了id10122的部分
     # 第二部分：id10123-id10471
-    output_folder = '/mnt/f/wrong_segments/'     # 输出文件夹
-    log_file = './prediction.log'           # 日志文件
+    output_folder = '/mnt/f/wrong_segments2/'     # 输出文件夹
+    log_file = './prediction2.log'           # 日志文件
     
     # 处理文件夹
     # process_folder(model, input_folder, output_folder, log_file)
-    for i in range(11001, 12000): # 包含11000
+    for i in range(1, 12000):
         input_folders = os.path.join(input_folder, f'id{i}')
         print(f"Processing folder: {input_folders}")
         # 处理文件夹

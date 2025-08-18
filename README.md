@@ -9,22 +9,22 @@
 - 语音关键词分类
 
 ## 文件结构
-├── converted_pickle/    # 转换后的特征数据（11类）
-├── converted_pickle2/   # 转换后的特征数据（8类）
-├── converted_pickle3/   # 转换后的误识别特征数据
-├── model/               # 模型定义
-│   ├── crnn_model.py    # CRNN模型实现
-│   └── rnn_cells/       # 自定义RNN单元
-├── origin_pickle/       # 原始特征数据（11类）
-├── origin_pickle2/      # 原始特征数据 + 误识别特征数据（8类）
-├── so_mfcc.py           # 音频特征提取代码
-├── test_model.py        # 测试脚本
-├── test_pkl.py          # 测试pkl数据
-├── test_long.py         # 测试长音频（添加负样本）
-├── train_crnn.py        # 训练脚本
-├── checkpoint1/
-│   ├── crnn_model_best.pth     # 训练好的模型（最佳）
-│   └── training_log.txt        # 训练日志
+├── converted_11/           # 转换后的特征数据（11类）
+├── converted_8/            # 转换后的特征数据（8类）
+├── converted_un/           # 转换后的误识别特征数据
+├── model/                  # 模型定义
+│   ├── crnn_model.py       # CRNN模型实现
+│   └── rnn_cells/          # 自定义RNN单元
+├── origin_pickle/          # 原始特征数据（11类）
+├── origin_pickle2/         # 原始特征数据 + 误识别特征数据（8类）
+├── quantproject/           # 量化工程
+├── so_mfcc.py              # 音频特征提取代码
+├── test_model.py           # 测试脚本
+├── test_pkl.py             # 测试pkl数据
+├── test_long.py            # 测试长音频（添加负样本）
+├── train_crnn.py           # 训练脚本
+├── checkpoint1/            # 模型训练结果（config_20250609）
+├── checkpoint2/                # 模型训练结果（config_20250801）
 
 ## 快速开始
 1. 训练模型

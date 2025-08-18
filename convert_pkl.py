@@ -15,10 +15,10 @@ keywords_dict = {
 }
 
 # 原始文件所在目录
-input_dir = 'origin_pickle'  # 修改为你的原始文件目录
+input_dir = 'origin_pickle2'  # 修改为你的原始文件目录
 
 # 获取目录下所有pkl文件
-file_list = [f for f in os.listdir(input_dir) if f.endswith('.pkl')]
+file_list = [f for f in os.listdir(input_dir) if f.endswith('new.pkl')]
 
 # 从文件名提取关键词并生成标签
 def get_label_from_filename(filename):
@@ -46,10 +46,10 @@ for file in file_list:
     output_file = f"converted_{file}"
     
     # 确保输出目录存在
-    os.makedirs('converted_pickle', exist_ok=True)
+    os.makedirs('converted_un', exist_ok=True)
     
     # 保存转换后的数据
-    with open(os.path.join('converted_pickle', output_file), 'wb') as f:
+    with open(os.path.join('converted_un', output_file), 'wb') as f:
         pickle.dump(output_data, f)
     
     # 打印处理信息

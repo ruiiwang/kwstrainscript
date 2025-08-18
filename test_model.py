@@ -7,12 +7,10 @@ from mfcc_io import mfcc
 # 模型配置(需与训练时一致)
 config = {
     "in_c": 16,
-    "conv": [
-        {"out_c": 32, "k": 16, "s": 2, "p":5, "dropout": 0.0},
-        {"out_c": 64, "k": 8, "s": 2, "p":3, "dropout": 0.0}
-    ],
-    "rnn": {"dim": 64, "layers": 1, "dropout": 0.25, "bidirectional": True},
-    "fc_out": 8  # 8个类别
+    "conv": [{"out_c": 16, "k": 8, "s": 2, "p": 1, "dropout": 0.0},
+                {"out_c": 32, "k": 4, "s": 2, "p": 1, "dropout": 0.0}],
+    "rnn": {"dim": 32, "layers": 1, "dropout": 0.2, "bidirectional": True},
+    "fc_out": 8
 }
 
 # 类别名称映射(根据实际类别修改)
@@ -161,4 +159,4 @@ if __name__ == "__main__":
     
     # 测试指定文件夹
     test_folder(model, '/mnt/d/human_modified_153', class_names)
-    test_folder(model, '/mnt/d/1.6svoice', class_names)
+    # test_folder(model, '/mnt/d/1.6svoice', class_names)

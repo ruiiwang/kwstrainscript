@@ -19,11 +19,11 @@ import pickle
 
 if __name__ == "__main__":
     # print(torch.__version__)
-    config_file = "./entercompany_checkpoint/config_8classes_20250609.json5"
+    config_file = "./entercompany_checkpoint/config_8classes_20250801.json5"
     audio_file = "./entercompany_checkpoint/AUS_Sydney_Female_25_HeyMemo_var1.wav"
     dev_pickle = "./entercompany_checkpoint/heymemo_devcombine.pkl"
-    checkpoint_path = './entercompany_checkpoint/'
-    checkout_file1 = "./entercompany_checkpoint/crnn_model_best.pth"
+    checkpoint_path = './entercompany_checkpoint2/'
+    checkout_file1 = "../checkpoint2/crnn_model_best.pth"
     
    
     
