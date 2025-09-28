@@ -32,7 +32,7 @@ def process_folder(input_dir, pattern=None):
 
 if __name__ == '__main__':
     input_folders = [
-        # '/mnt/d/project/1.6svoice/HeyMemo',
+        # '/mnt/d/1.6svoice/HeyMemo',
         # '/mnt/d/1.6svoice/LookAnd',
         # '/mnt/d/1.6svoice/Next',
         # '/mnt/d/1.6svoice/Pause',
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     for folder in input_folders:
         folder_name = os.path.basename(folder)
         # output_file = f'{folder_name}_features.pkl'
-        output_file = 'origin_pickle2/UNKNOWN_WORD_features_new.pkl'
+        output_file = 'origin_pickle_un/UNKNOWN_WORD_features.pkl'
         
         print(f'正在处理文件夹: {folder}')
         features = process_folder(folder, pattern=file_pattern)

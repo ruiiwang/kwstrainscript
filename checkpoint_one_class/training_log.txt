@@ -1,0 +1,7 @@
+Start!
+Total samples: 21168
+batch_size: 16
+Epochs: 1
+Epoch 1/1, Loss: 0.0117
+Best model saved with loss: 0.0117
+Finish!
