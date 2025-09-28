@@ -1,0 +1,50 @@
+{
+    "title": "CRNN_Training_Config",
+    "feature": {
+        "in_c": 16,
+        "conv": [{"out_c": 16, "k": 8, "s": 2, "p": 1, "dropout": 0.0},
+                 {"out_c": 32, "k": 4, "s": 2, "p": 1, "dropout": 0.0}],
+        "rnn": {"dim": 32, "layers": 1, "dropout": 0.2, "bidirectional": true},
+        "fc_out": 8
+    },
+
+    "feature_input": {
+        "sample_rate": 16000, 
+        "clip_frame": 100, 
+        "fft_len": 512, 
+        "frame_len": 256,
+        "n_mels": 40, 
+        "n_mfcc": 16
+    },
+
+    "dataset": {
+        "train_datapath": "converted_pickle",
+        "train_ratio": 0.6,
+        "val_ratio": 0.2,
+        "test_ratio": 0.2
+    },
+
+    "optimizer": {
+        "type": "Adam",
+        "lr": 0.001
+    },
+
+    "training": {
+        "epochs": 100,
+        "batch_size": 16,
+        "checkpoint_path": "./",
+        "model_name": "crnn_model_best.pth",
+        "criterion": "CrossEntropyLoss"
+    },
+
+    "classes": {
+        "UNKNOWN_WORD": 0,
+        "HeyMemo": 1,
+        "LookAnd": 2,
+        "Pause": 3,
+        "Play": 4,
+        "StopRecording": 5,
+        "TakeAPicture": 6,
+        "TakeAVideo": 7,
+    }
+}
