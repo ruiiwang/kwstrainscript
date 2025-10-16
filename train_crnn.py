@@ -19,7 +19,7 @@ config = {
     "conv": [{"out_c": 16, "k": 8, "s": 2, "p": 1, "dropout": 0.0},
             {"out_c": 32, "k": 4, "s": 2, "p": 1, "dropout": 0.0}],
     "rnn": {"dim": 32, "layers": 1, "dropout": 0.2, "bidirectional": True},
-    "fc_out": 8
+    "fc_out": 2  # 类别
 }
 
 def log_message(message, log_file):
@@ -41,6 +41,15 @@ def load_all_pkls(pkl_dirs):
                     data = pickle.load(f)
                     feat = data[0]
                     features.append(feat)
+
+                    # # 修改标签：将标签2-7都变为0，只保留heymemo（标签1）
+                    # original_labels = data[1].long()
+                    # # 创建新标签张量
+                    # new_labels = torch.zeros_like(original_labels)
+                    # # 找出原始标签为1的位置，将新标签对应位置设为1
+                    # new_labels[original_labels == 1] = 1
+                    # # 其他标签（0,2-7）都保持为0
+                    # labels.append(new_labels)
                     labels.append(data[1].long())
     if not features:
         raise ValueError("没有找到任何pkl文件，请检查目录设置。")
@@ -80,18 +89,18 @@ def train_model(model, features, labels, epochs=10, batch_size=32, folder='check
     best_loss = float('inf')
 
     if resume_checkpoint and os.path.exists(resume_checkpoint):
-        log_message(f'从检查点 {resume_checkpoint} 恢复训练...', log_file)
+        log_message(f'Continue training from {resume_checkpoint} ...', log_file)
         checkpoint = torch.load(resume_checkpoint)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         start_epoch = checkpoint['epoch']
         best_loss = checkpoint['loss']
-        log_message(f'从 Epoch {start_epoch + 1} 开始训练，上次最佳损失: {best_loss:.4f}', log_file)
+        log_message(f'Continue training from Epoch {start_epoch + 1} , last best loss: {best_loss:.4f}', log_file)
     else:
-        log_message('开始训练...', log_file)
-        log_message(f'总样本数: {len(features)}', log_file)
+        log_message('Start!', log_file)
+        log_message(f'Total samples: {len(features)}', log_file)
         log_message(f'batch_size: {batch_size}', log_file)
-        log_message(f'训练周期: {epochs}', log_file)
+        log_message(f'Epochs: {epochs}', log_file)
 
     # 确保checkpoint目录存在
     if not os.path.exists(folder):
@@ -137,7 +146,7 @@ def train_model(model, features, labels, epochs=10, batch_size=32, folder='check
             torch.save(best_model, f'{folder}/crnn_model_best.pth')
     
     log_message(f'Best model saved with loss: {best_loss:.4f}', log_file)
-    log_message('训练完成!', log_file)
+    log_message('Finish!', log_file)
     log_file.close()
     
     # 删除原来的保存最终模型的代码
@@ -146,7 +155,7 @@ def train_model(model, features, labels, epochs=10, batch_size=32, folder='check
 if __name__ == "__main__":
     # 设置要加载的pkl文件目录列表
     # 您可以将新的pkl文件目录添加到这个列表中
-    pkl_data_dirs = ['converted_pickle2'] # 添加您的新数据目录
+    pkl_data_dirs = ['converted_2'] # 添加您的新数据目录
     
     # 加载数据
     features, labels = load_all_pkls(pkl_data_dirs)
@@ -158,5 +167,5 @@ if __name__ == "__main__":
     resume_checkpoint_path = None # 例如: 'checkpoint1/epoch15.pth'
 
     # 开始训练
-    train_model(model, features, labels, epochs=100, batch_size=64, folder='checkpoint3', resume_checkpoint=resume_checkpoint_path)
+    train_model(model, features, labels, epochs=100, batch_size=64, folder='checkpoint_2.2', resume_checkpoint=resume_checkpoint_path)
     

@@ -1,7 +1,33 @@
 Start!
-Total samples: 21168
-batch_size: 16
-Epochs: 1
-Epoch 1/1, Loss: 0.0117
-Best model saved with loss: 0.0117
-Finish!
+Device: cpu
+Total samples: 518506
+batch_size: 64
+Epochs: 100
+Fine-tune: False, LR: 0.001, Loss: bce
+Computed pos_weight: 5.8227
+Epoch 1/100, Train Loss: 0.0565, Train Acc: 98.08%, AvgPosProb: 0.1474, Val Loss: 0.0327, Val Acc: 98.89%, Val F1: 0.9608, Val FAR: 0.0029
+New best val_loss: 0.0327
+Epoch 2/100, Train Loss: 0.0295, Train Acc: 99.01%, AvgPosProb: 0.1466, Val Loss: 0.0288, Val Acc: 99.03%, Val F1: 0.9668, Val FAR: 0.0060
+New best val_loss: 0.0288
+Epoch 3/100, Train Loss: 0.0236, Train Acc: 99.20%, AvgPosProb: 0.1466, Val Loss: 0.0239, Val Acc: 99.21%, Val F1: 0.9723, Val FAR: 0.0023
+New best val_loss: 0.0239
+Epoch 4/100, Train Loss: 0.0198, Train Acc: 99.32%, AvgPosProb: 0.1466, Val Loss: 0.0233, Val Acc: 99.24%, Val F1: 0.9735, Val FAR: 0.0031
+New best val_loss: 0.0233
+Epoch 5/100, Train Loss: 0.0175, Train Acc: 99.40%, AvgPosProb: 0.1466, Val Loss: 0.0206, Val Acc: 99.33%, Val F1: 0.9769, Val FAR: 0.0035
+New best val_loss: 0.0206
+Epoch 6/100, Train Loss: 0.0155, Train Acc: 99.47%, AvgPosProb: 0.1466, Val Loss: 0.0199, Val Acc: 99.34%, Val F1: 0.9771, Val FAR: 0.0029
+New best val_loss: 0.0199
+Epoch 7/100, Train Loss: 0.0142, Train Acc: 99.52%, AvgPosProb: 0.1466, Val Loss: 0.0184, Val Acc: 99.41%, Val F1: 0.9794, Val FAR: 0.0028
+New best val_loss: 0.0184
+Epoch 8/100, Train Loss: 0.0127, Train Acc: 99.57%, AvgPosProb: 0.1466, Val Loss: 0.0190, Val Acc: 99.39%, Val F1: 0.9787, Val FAR: 0.0030
+Epoch 9/100, Train Loss: 0.0119, Train Acc: 99.59%, AvgPosProb: 0.1466, Val Loss: 0.0192, Val Acc: 99.38%, Val F1: 0.9785, Val FAR: 0.0035
+Epoch 10/100, Train Loss: 0.0107, Train Acc: 99.63%, AvgPosProb: 0.1466, Val Loss: 0.0191, Val Acc: 99.38%, Val F1: 0.9787, Val FAR: 0.0033
+Epoch 11/100, Train Loss: 0.0101, Train Acc: 99.64%, AvgPosProb: 0.1466, Val Loss: 0.0194, Val Acc: 99.42%, Val F1: 0.9798, Val FAR: 0.0018
+Epoch 12/100, Train Loss: 0.0091, Train Acc: 99.68%, AvgPosProb: 0.1466, Val Loss: 0.0189, Val Acc: 99.44%, Val F1: 0.9806, Val FAR: 0.0021
+Epoch 13/100, Train Loss: 0.0087, Train Acc: 99.69%, AvgPosProb: 0.1466, Val Loss: 0.0187, Val Acc: 99.47%, Val F1: 0.9817, Val FAR: 0.0019
+Epoch 14/100, Train Loss: 0.0081, Train Acc: 99.70%, AvgPosProb: 0.1466, Val Loss: 0.0214, Val Acc: 99.33%, Val F1: 0.9770, Val FAR: 0.0051
+Epoch 15/100, Train Loss: 0.0076, Train Acc: 99.73%, AvgPosProb: 0.1466, Val Loss: 0.0199, Val Acc: 99.43%, Val F1: 0.9803, Val FAR: 0.0022
+Epoch 16/100, Train Loss: 0.0074, Train Acc: 99.74%, AvgPosProb: 0.1466, Val Loss: 0.0191, Val Acc: 99.46%, Val F1: 0.9813, Val FAR: 0.0025
+Epoch 17/100, Train Loss: 0.0066, Train Acc: 99.77%, AvgPosProb: 0.1466, Val Loss: 0.0192, Val Acc: 99.42%, Val F1: 0.9801, Val FAR: 0.0032
+Early stopping triggered. Best val_loss: 0.0184
+Best model saved. Best val_loss: 0.0184

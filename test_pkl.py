@@ -3,30 +3,30 @@ import pickle
 from model.crnn_model import CnnRnnModel1Channel
 
 # 模型配置(需与训练时一致)
+# 类别名称映射(根据实际类别修改)
+class_names = {
+    0: "UNKNOWN_WORD",
+    1: "HeyMemo",
+    # 2: "LookAnd",
+    # 3: "Pause",
+    # 4: "Play",
+    # 5: "StopRecording",
+    # 6: "TakeAPicture",
+    # 7: "TakeAVideo"
+}
+
 config = {
     "in_c": 16,
     "conv": [{"out_c": 16, "k": 8, "s": 2, "p": 1, "dropout": 0.0},
                 {"out_c": 32, "k": 4, "s": 2, "p": 1, "dropout": 0.0}],
     "rnn": {"dim": 32, "layers": 1, "dropout": 0.2, "bidirectional": True},
-    "fc_out": 8
-}
-
-# 类别名称映射(根据实际类别修改)
-class_names = {
-    0: "UNKNOWN_WORD",
-    1: "HeyMemo",
-    2: "LookAnd",
-    3: "Pause",
-    4: "Play",
-    5: "StopRecording",
-    6: "TakeAPicture",
-    7: "TakeAVideo"
+    "fc_out": len(class_names)
 }
 
 # 新增：pkl文件中的标签到模型class_names的映射
 pkl_label_to_class_name_map = {
     0: 0,  # pkl中的0映射到class_names中的0 (UNKNOWN_WORD)
-    4: 1   # pkl中的1映射到class_names中的1 (HeyMemo)
+    1: 1   # pkl中的1映射到class_names中的1 (HeyMemo)
 }
 
 def load_model(model_path):
@@ -112,7 +112,15 @@ def test_pkl_data(model, pkl_path, class_names):
 
 if __name__ == "__main__":
     # 加载模型
-    model = load_model('checkpoint1/crnn_model_best.pth')
+    model = load_model('checkpoint_2.2/crnn_model_best.pth')
     
     # 测试指定pkl文件
-    test_pkl_data(model, 'converted_pickle2/converted_HeyMemo_features.pkl', class_names)
+    test_pkl_data(model, 'converted_8/converted_HeyMemo_features.pkl', class_names)
+    test_pkl_data(model, 'converted_8/converted_LookAnd_features.pkl', class_names)
+    test_pkl_data(model, 'converted_8/converted_Pause_features.pkl', class_names)
+    test_pkl_data(model, 'converted_8/converted_Play_features.pkl', class_names)
+    test_pkl_data(model, 'converted_8/converted_StopRecording_features.pkl', class_names)
+    test_pkl_data(model, 'converted_8/converted_TakeAPicture_features.pkl', class_names)
+    test_pkl_data(model, 'converted_8/converted_TakeAVideo_features.pkl', class_names)
+    # test_pkl_data(model, 'converted_un/wrong_segments2_data.pkl', class_names)
+

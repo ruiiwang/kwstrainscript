@@ -5,25 +5,26 @@ from model.crnn_model import CnnRnnModel1Channel
 from mfcc_io import mfcc
 
 # 模型配置(需与训练时一致)
+# 类别名称映射(根据实际类别修改)
+class_names = {
+    0: "UNKNOWN_WORD",
+    1: "HeyMemo",
+    # 2: "LookAnd",
+    # 3: "Pause",
+    # 4: "Play",
+    # 5: "StopRecording",
+    # 6: "TakeAPicture",
+    # 7: "TakeAVideo"
+}
+
 config = {
     "in_c": 16,
     "conv": [{"out_c": 16, "k": 8, "s": 2, "p": 1, "dropout": 0.0},
                 {"out_c": 32, "k": 4, "s": 2, "p": 1, "dropout": 0.0}],
     "rnn": {"dim": 32, "layers": 1, "dropout": 0.2, "bidirectional": True},
-    "fc_out": 8
+    "fc_out": len(class_names)
 }
 
-# 类别名称映射(根据实际类别修改)
-class_names = {
-    0: "UNKNOWN_WORD",
-    1: "HeyMemo",
-    2: "LookAnd",
-    3: "Pause",
-    4: "Play",
-    5: "StopRecording",
-    6: "TakeAPicture",
-    7: "TakeAVideo"
-}
 
 def load_model(model_path):
     model = CnnRnnModel1Channel(config)
@@ -49,7 +50,7 @@ def extract_features(wav_path):
     return torch.FloatTensor(mfcc_data)
 
 def test_folder(model, folder_path, class_names):
-    threshold = 0.9  # 可调整的阈值
+    threshold = 0.95  # 可调整的阈值
 
     # 重新初始化一个更细致的统计结构
     detailed_stats = {
@@ -155,8 +156,8 @@ def test_folder(model, folder_path, class_names):
 
 if __name__ == "__main__":
     # 加载模型
-    model = load_model('checkpoint1/crnn_model_best.pth')
+    model = load_model('checkpoint_2/crnn_model_best.pth')
     
     # 测试指定文件夹
-    test_folder(model, '/mnt/d/human_modified_153', class_names)
-    # test_folder(model, '/mnt/d/1.6svoice', class_names)
+    # test_folder(model, '/mnt/c/Users/Win11/Downloads/vad-mirror.wav', class_names)
+    test_folder(model, '/mnt/f/1.6svoice/UNKNOWN_WORD', class_names)

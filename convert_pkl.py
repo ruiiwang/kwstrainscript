@@ -15,10 +15,10 @@ keywords_dict = {
 }
 
 # 原始文件所在目录
-input_dir = 'origin_pickle2'  # 修改为你的原始文件目录
+input_dir = 'origin_pickle_un'  # 修改为你的原始文件目录
 
 # 获取目录下所有pkl文件
-file_list = [f for f in os.listdir(input_dir) if f.endswith('new.pkl')]
+file_list = [f for f in os.listdir(input_dir) if f.endswith('.pkl')]
 
 # 从文件名提取关键词并生成标签
 def get_label_from_filename(filename):

@@ -9,12 +9,12 @@ from mfcc_io import mfcc
 keywords_dict = {
     'UNKNOWN_WORD': 0,
     'HeyMemo': 1,
-    'LookAnd': 2,
-    'Pause': 3,
-    'Play': 4,
-    'StopRecording': 5,
-    'TakeAPicture': 6,
-    'TakeAVideo': 7,
+    # 'LookAnd': 2,
+    # 'Pause': 3,
+    # 'Play': 4,
+    # 'StopRecording': 5,
+    # 'TakeAPicture': 6,
+    # 'TakeAVideo': 7,
 }
 
 def process_folder(input_dir, pattern=None):
@@ -56,22 +56,25 @@ if __name__ == '__main__':
     # 包含.wav文件的输入文件夹列表。
     # 文件夹的名称应与keywords_dict中的键相对应。
     input_folders = [
-        # '/mnt/d/1.6svoice/HeyMemo',
-        # '/mnt/d/1.6svoice/LookAnd',
-        # '/mnt/d/1.6svoice/Next',
-        # '/mnt/d/1.6svoice/Pause',
-        # '/mnt/d/1.6svoice/Play',
-        # '/mnt/d/1.6svoice/StopRecording',
-        # '/mnt/d/1.6svoice/TakeAPicture',
-        # '/mnt/d/1.6svoice/TakeAVideo',
-        # '/mnt/d/1.6svoice/UNKNOWN_WORD',
-        # '/mnt/d/1.6svoice/VolumeDown',
-        # '/mnt/d/1.6svoice/VolumeUp',
-        '/mnt/f/realtime_sep',
+        # '/mnt/f/1.6s_voice/HeyMemo_augment',
+        # '/mnt/f/1.6s_voice/LookAnd',
+        # '/mnt/f/1.6s_voice/Next',
+        # '/mnt/f/1.6s_voice/Pause',
+        # '/mnt/f/1.6s_voice/Play',
+        # '/mnt/f/1.6s_voice/StopRecording',
+        # '/mnt/f/1.6s_voice/TakeAPicture',
+        # '/mnt/f/1.6s_voice/TakeAVideo',
+        # '/mnt/f/1.6s_voice/UNKNOWN_WORD',
+        # '/mnt/f/1.6s_voice/VolumeDown',
+        # '/mnt/f/1.6s_voice/VolumeUp',
+        '/mnt/f/1.6s_voice/CHiME6/S07',
+        '/mnt/f/1.6s_voice/CHiME6/S08',
+        '/mnt/f/1.6s_voice/CHiME6/S12',
+        '/mnt/f/1.6s_voice/CHiME6/S13',
     ]
     
     # 用于保存最终.pkl文件的目录
-    output_dir = 'converted_un'
+    output_dir = 'converted_2_ft2'
     
     # 可选：仅处理包含此模式的文件
     file_pattern = None

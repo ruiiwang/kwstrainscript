@@ -1,14 +1,27 @@
 import pickle
 import numpy as np
+import os
 
-with open('converted_8/converted_HeyMemo_features.pkl', 'rb') as f:
-    data = pickle.load(f)
+folder = 'converted_2'
+pkl_files = [os.path.join(folder, fn) for fn in os.listdir(folder) if fn.endswith('.pkl')]
 
-# 查看总项数
-print(f"总项数: {len(data)}")
-print(data[0].shape)
-print(data[1].shape)
-print(data[1])
+for pkl_path in pkl_files:
+    with open(pkl_path, 'rb') as f:
+        data = pickle.load(f)
+    print(pkl_path)
+    print(f"总项数: {len(data)}")
+    print(data[0].shape)
+    print(data[1].shape)
+    print(data[1])
+
+# with open('converted_un/1.6s_half_augment_data.pkl', 'rb') as f:
+#     data = pickle.load(f)
+
+# # 查看总项数
+# print(f"总项数: {len(data)}")
+# print(data[0].shape)
+# print(data[1].shape)
+# print(data[1])
 
 # 查看每一项的形状
 # for i, item in enumerate(data):
