@@ -52,7 +52,7 @@ def run_stream_inference_on_folder(input_dir, log_file='./CHiME.log'):
 
     sr = 16000
     window_length = 1.6
-    hop_length = 0.02
+    hop_length = 0.2
     window_samples = int(window_length * sr)
     hop_samples = int(hop_length * sr)
     
@@ -134,6 +134,6 @@ def run_stream_inference_on_folder(input_dir, log_file='./CHiME.log'):
     print(f"所有推理结果已保存到 {log_file}")
 
 if __name__ == "__main__":
-    # input_dir = "/mnt/f/realtime"
-    input_dir = "/mnt/c/Users/Win11/Downloads/CHiME6_train"
+    input_dir = "/mnt/f/realtime"
+    # input_dir = "/mnt/c/Users/Win11/Downloads/CHiME6_train"
     run_stream_inference_on_folder(input_dir)

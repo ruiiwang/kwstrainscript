@@ -54,4 +54,4 @@ def analyze_softmax_idx1(log_path):
         print("没有找到 idx=1 的数据。")
 
 if __name__ == "__main__":
-    analyze_softmax_idx1("realtime2.log")
+    analyze_softmax_idx1("realtime.log")
