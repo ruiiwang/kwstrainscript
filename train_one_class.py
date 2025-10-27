@@ -341,7 +341,7 @@ if __name__ == "__main__":
             model, features, labels,
             epochs=100,                 # 你可以按需增减
             batch_size=64,             # 32/64 较合适
-            folder='checkpoint_one_class',
+            folder='checkpoint_1.0',
             resume_checkpoint=None,
             fine_tune=False,
             learning_rate=1e-3,
@@ -357,7 +357,7 @@ if __name__ == "__main__":
             model, features, labels,
             epochs=30,                 # 微调一般 10~30 就能收敛
             batch_size=32,             # 微调阶段 16/32
-            folder='checkpoint_one_class_ft',
+            folder='checkpoint_1.0_ft',
             resume_checkpoint=resume_checkpoint_path,
             fine_tune=True,            # 启用微调模式
             learning_rate=1e-4,        # 微调更小 LR

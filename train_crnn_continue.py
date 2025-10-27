@@ -302,7 +302,7 @@ def train_model(model, features, labels, epochs=10, batch_size=32, folder='check
 
 if __name__ == "__main__":
     # 设置要加载的pkl文件目录列表（第一个为旧数据，第二个为新数据）
-    pkl_data_dirs = ['converted_2', 'converted_2_ft']
+    pkl_data_dirs = ['converted_2', 'converted_2_ft2']
 
     # 创建模型
     model = CnnRnnModel1Channel(config)
@@ -311,7 +311,7 @@ if __name__ == "__main__":
     run_from_scratch = False  # True: 从零开始训练；False: 迭代微调
 
     # 采样比例设置（微调时：旧数据 n%，新数据 m%；从零开始时：均为 100%）
-    sample_percent_old = 40   # 旧数据 n%
+    sample_percent_old = 55   # 旧数据 n%
     sample_percent_new = 100  # 新数据 m%
     effective_percents = [
         100 if run_from_scratch else sample_percent_old,
@@ -322,7 +322,7 @@ if __name__ == "__main__":
     features, labels = load_pkls_with_sampling(pkl_data_dirs, effective_percents)
 
     # 设置要恢复的检查点路径
-    resume_checkpoint_path = 'checkpoint_2.2/epoch94.pth' if not run_from_scratch else None
+    resume_checkpoint_path = 'checkpoint_2.2_ft1/epoch14.pth' if not run_from_scratch else None
 
     if run_from_scratch:
         # 从零开始训练（标准配置）
@@ -346,14 +346,14 @@ if __name__ == "__main__":
             model, features, labels,
             epochs=30,                 # 微调一般 10~30 就能收敛
             batch_size=32,             # 微调阶段 8/16/32
-            folder='checkpoint_2.2_ft',
+            folder='checkpoint_2.2_ft2',
             resume_checkpoint=resume_checkpoint_path,
             fine_tune=True,            # 启用微调模式
             learning_rate=1e-4,        # 微调更小 LR
             loss_type='weighted_ce',         # 可选 'weighted_ce' 或 'focal'
             focal_gamma=2.0,           # Focal Loss gamma
             early_stopping_metric='far',# 或 'far' / 'val_loss'
-            patience=5,                # 早停耐心
+            patience=10,                # 早停耐心
             pos_class_id=1,            # 以 heymemo=1 为正类，计算 F1/FAR
             freeze_frontend=True       # 冻结 conv/rnn，只训练 fc
         )
