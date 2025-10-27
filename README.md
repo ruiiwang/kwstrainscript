@@ -27,11 +27,13 @@
 ├── test_model.py           # 测试脚本
 ├── test_pkl.py             # 测试pkl数据
 ├── test_long.py            # 测试长音频（添加负样本）
+├── test_one_class.py       # 1分类测试脚本
 ├── train_crnn.py           # 训练脚本
+├── train_one_class.py      # 1分类训练脚本
 ├── checkpoint_old/         # 模型训练结果（config_20250609）
-├── checkpoint_8/           # 模型训练结果（config_20250815）
-├── checkpoint_2/           # 模型训练结果（config_20250909）
-
+├── checkpoint_8/           # 8分类模型训练结果（config_20250815）
+├── checkpoint_2/           # 2分类模型训练结果（config_20250909）
+├── checkpoint_1/           # 1分类模型训练结果（config_20251017）
 
 ## 快速开始
 1. 训练模型
