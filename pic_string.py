@@ -156,6 +156,7 @@ class StreamSimulator:
             with torch.no_grad():
                 outputs = self.model(features)
                 probs = torch.softmax(outputs, dim=1)
+                # print("outputs:", outputs, "probs:", probs)
 
             probabilities.append(probs.squeeze().numpy())
             current_time_sec = i / self.config.SR
@@ -194,24 +195,24 @@ class Visualizer:
             return
         
         # 创建单个图表，使用双Y轴
-        fig, ax1 = plt.subplots(figsize=(25, 12))
+        fig, ax1 = plt.subplots(figsize=(300, 12))
         
-        # 将时间从秒转换为毫秒
-        time_points_ms = [t * 1000 for t in timestamps]
+        # 将时间改为秒
+        time_points_s = [t for t in timestamps]
         
         # 查找 "HeyMemo" 对应的索引
         heymemo_index = self.config.CLASS_NAMES_INDEX.get("HeyMemo")
         
         # 绘制HeyMemo概率曲线 (左Y轴)
-        ax1.set_xlabel('Time(ms)')
+        ax1.set_xlabel('Time(s)')
         ax1.set_ylabel('HeyMemo Probability', color='black')
         if heymemo_index is not None:
             # 加粗概率曲线
-            ax1.plot(time_points_ms, probabilities[:, heymemo_index], label='HeyMemo', linewidth=4.0, color='red')
+            ax1.plot(time_points_s, probabilities[:, heymemo_index], label='HeyMemo', linewidth=2.0, color='red')
         else:
             # 如果找不到HeyMemo，作为备用方案，绘制所有类别的概率
             for i, class_name in self.config.CLASS_NAMES.items():
-                ax1.plot(time_points_ms, probabilities[:, i], label=f'Probability: {class_name}')
+                ax1.plot(time_points_s, probabilities[:, i], label=f'Probability: {class_name}')
 
         ax1.tick_params(axis='y', labelcolor='black')
         ax1.set_ylim(0, 1)
@@ -229,7 +230,7 @@ class Visualizer:
         # 绘制音量曲线 (右Y轴)
         ax2.set_ylabel('Volume', color='black')
         # 更改颜色为蓝色
-        ax2.plot(time_points_ms, volume_data_normalized, 'b-', label='Volume', linewidth=2.0)
+        ax2.plot(time_points_s, volume_data_normalized, 'b-', label='Volume', linewidth=1.0)
         ax2.tick_params(axis='y', labelcolor='black')
         # 调整Y轴范围
         ax2.set_ylim(0, 1.5)
@@ -243,17 +244,17 @@ class Visualizer:
         }
 
         # 1. 绘制所有触发时间的垂直线 (去重)
-        unique_trigger_times_ms = sorted(list(set(event['time'] * 1000 for event in triggered_events)))
-        if unique_trigger_times_ms:
+        unique_trigger_times_s = sorted(list(set(event['time'] for event in triggered_events)))
+        if unique_trigger_times_s:
             # 只为第一条垂直线添加图例标签，避免重复
-            ax1.axvline(x=unique_trigger_times_ms[0], color='gray', linestyle='--', linewidth=1.5, label='Trigger Time')
-            for i in range(1, len(unique_trigger_times_ms)):
-                ax1.axvline(x=unique_trigger_times_ms[i], color='gray', linestyle='--', linewidth=1.5)
+            ax1.axvline(x=unique_trigger_times_s[0], color='gray', linestyle='--', linewidth=1.5, label='Trigger Time')
+            for i in range(1, len(unique_trigger_times_s)):
+                ax1.axvline(x=unique_trigger_times_s[i], color='gray', linestyle='--', linewidth=1.5)
 
         # 2. 按策略绘制散点，以区分重叠的触发
         plotted_strategy_labels = set()
         for event in triggered_events:
-            time_ms = event["time"] * 1000
+            time_s = event["time"]
             strategy_name = event["strategy_name"]
             
             if strategy_name not in strategy_styles:
@@ -264,10 +265,10 @@ class Visualizer:
             
             # 为每种策略只添加一次图例
             if label not in plotted_strategy_labels:
-                ax1.scatter(time_ms, style['y'], color=style['color'], marker=style['marker'], s=150, label=label, zorder=10)
+                ax1.scatter(time_s, style['y'], color=style['color'], marker=style['marker'], s=150, label=label, zorder=10)
                 plotted_strategy_labels.add(label)
             else:
-                ax1.scatter(time_ms, style['y'], color=style['color'], marker=style['marker'], s=150, zorder=10)
+                ax1.scatter(time_s, style['y'], color=style['color'], marker=style['marker'], s=150, zorder=10)
 
         # 添加图例
         lines1, labels1 = ax1.get_legend_handles_labels()
@@ -277,14 +278,19 @@ class Visualizer:
         # 设置标题
         plt.title(title or 'HeyMemo Recognition and Volume')
         
-        # 设置更紧密的时间轴刻度
-        if time_points_ms:
-            max_time = max(time_points_ms) if time_points_ms else 0
-            plt.xticks(np.arange(0, max_time + 100, 200))
+        # 设置更宽松的时间轴刻度（秒）
+        if time_points_s:
+            max_time = max(time_points_s)
+            duration = max_time if max_time > 0 else 0
+            if duration <= 1000:
+                step = 1
+            else:
+                step = 10
+            plt.xticks(np.arange(0, max_time + step, step))
         
         plt.tight_layout()
         # 保存图像
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=60, bbox_inches='tight')
         plt.close()
         print(f"图表已保存至: {output_path}")
 
@@ -363,7 +369,7 @@ def run_visualization(model_path, wav_path, output_dir):
 if __name__ == "__main__":
     # 请根据实际情况修改模型和数据路
     model_path = 'checkpoint_2.2_ft2/crnn_model_best.pth'
-    data_path = './string_sample/edgetts_test.wav'
-    output_directory = './string_plots/pos'
+    data_path = './string_heymemo/all_heymemo_short.wav'
+    output_directory = './string_plots'
     
     run_visualization(model_path, data_path, output_directory)

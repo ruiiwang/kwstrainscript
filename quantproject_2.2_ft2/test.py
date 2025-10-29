@@ -23,7 +23,7 @@ def softmax(x):
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum(axis=0)
 
-def run_stream_inference_on_folder(input_dir, log_file='./realtime.log'):
+def run_stream_inference_on_folder(input_dir, log_file='./heymemo_short.log'):
     checkpoint_path = './entercompany_checkpoint/'
     config_file = os.path.join(checkpoint_path, "config_2classes_20250909.json5")
     
@@ -47,7 +47,7 @@ def run_stream_inference_on_folder(input_dir, log_file='./realtime.log'):
 
     sr = 16000
     window_length = 1.6
-    hop_length = 0.2
+    hop_length = 0.02
     window_samples = int(window_length * sr)
     hop_samples = int(hop_length * sr)
     
@@ -78,8 +78,7 @@ def run_stream_inference_on_folder(input_dir, log_file='./realtime.log'):
                         segment = processed_signal[i:i+window_samples]
                         
                         # 计算原始音频中的对应时间戳
-                        # 因为前面加了缓冲区，所以要减去缓冲区的时间
-                        timestamp = (i - buffer_samples) / sr
+                        timestamp = i / sr
                         
                         captured_output = io.StringIO()
                         original_stdout = sys.stdout
@@ -91,13 +90,27 @@ def run_stream_inference_on_folder(input_dir, log_file='./realtime.log'):
                         finally:
                             sys.stdout = original_stdout
 
-                        # 解析输出，提取浮点数数组
-                        extracted_array = None
-                        match = re.search(r'\[\s*(-?\d+\.\d+\s+){1}-?\d+\.\d+\]', output_text, re.DOTALL)
-                        if match:
-                            data_string = match.group(0)
-                            numbers = re.findall(r'-?\d+\.\d+', data_string)
-                            extracted_array = np.array([float(n) for n in numbers])
+                        # 解析输出，提取两个括号的内容
+                        fixed_net = None
+                        float_net = None
+                        
+                        # 查找所有括号内容
+                        bracket_matches = re.findall(r'\[([^\]]+)\]', output_text)
+                        
+                        if len(bracket_matches) >= 2:
+                            # 第一个括号作为 fixed_net，第二个括号作为 float_net
+                            fixed_net = bracket_matches[0].strip()
+                            float_net = bracket_matches[1].strip()
+                            
+                            # 为了保持与原有softmax计算的兼容性，从float_net提取数值
+                            try:
+                                numbers = re.findall(r'-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?', float_net)
+                                extracted_array = np.array([float(n) for n in numbers])
+                            except:
+                                extracted_array = None
+                        else:
+                            print(f"未找到足够的括号数组: {output_text}")
+                            extracted_array = None
 
                         # 对提取出的数据进行 Softmax
                         softmax_result = None
@@ -116,7 +129,8 @@ def run_stream_inference_on_folder(input_dir, log_file='./realtime.log'):
                         log_line = (
                             f"{audio_path}, time:{timestamp:.2f}s, class:{predicted_class}, "
                             f"idx:{pred_idx}, "
-                            f"extracted_data:{extracted_array.tolist() if extracted_array is not None else 'None'}, "
+                            f"fixed_net:[{fixed_net}], "
+                            f"float_net:[{float_net}], "
                             f"softmax_result:{softmax_result.tolist() if softmax_result is not None else 'None'}\n"
                         )
                         logf.write(log_line)
@@ -125,6 +139,7 @@ def run_stream_inference_on_folder(input_dir, log_file='./realtime.log'):
     print(f"所有推理结果已保存到 {log_file}")
 
 if __name__ == "__main__":
-    input_dir = "/mnt/f/realtime"
+    # input_dir = "/mnt/f/realtime"
+    input_dir = "../string_heymemo"
     # input_dir = "/mnt/c/Users/Win11/Downloads/CHiME6"
     run_stream_inference_on_folder(input_dir)

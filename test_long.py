@@ -120,22 +120,22 @@ def process_folder(model, input_dir, output_dir, log_file):
 
 if __name__ == "__main__":
     # 加载模型
-    model = load_model('checkpoint_2.2_ft/crnn_model_best.pth')
+    model = load_model('checkpoint_2.2_ft2/crnn_model_best.pth')
     
     # 设置路径
     # input_folder = './string_sample/'  # 输入文件夹
     # input_folder = '/mnt/c/Users/Win11/Downloads/CHiME6_train/'
-    input_folder = '/mnt/f/realtime/'
-    output_folder = '/mnt/f/wrong_segments_2.2/'     # 输出文件夹
-    log_file = './prediction_2.2.log'           # 日志文件
-    process_folder(model, input_folder, output_folder, log_file)
+    # input_folder = '/mnt/f/realtime/'
+    output_folder = '/mnt/f/wrong_segments_2.22/'     # 输出文件夹
+    log_file = './prediction_2.22.log'           # 日志文件
+    # process_folder(model, input_folder, output_folder, log_file)
 
     # 新增：单文件处理开关（设置为具体 wav 路径以仅处理该文件）
-    # input_file = '/mnt/c/Users/Win11/Downloads/CHiME6/S19/S19_U06.CH4.wav'
-    # os.makedirs(output_folder, exist_ok=True)
-    # last_wakeup_audio_time = -1.6
-    # print(f"Processing single file: {input_file}")
-    # process_audio(model, input_file, output_folder, log_file, last_wakeup_audio_time)
+    input_file = '/mnt/c/Users/Win11/Downloads/recording_20251021_103943_240.wav'
+    os.makedirs(output_folder, exist_ok=True)
+    last_wakeup_audio_time = -1.6
+    print(f"Processing single file: {input_file}")
+    process_audio(model, input_file, output_folder, log_file, last_wakeup_audio_time)
 
     # for i in range(1, 12000):
     #     input_folders = os.path.join(input_folder, f'id{i}')

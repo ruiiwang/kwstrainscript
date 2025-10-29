@@ -21,8 +21,8 @@ if __name__ == "__main__":
     # print(torch.__version__)
     config_file = "./entercompany_checkpoint/config_2classes_20250909.json5"
     audio_file = "./entercompany_checkpoint/AUS_Sydney_Female_25_HeyMemo_var1.wav"
-    dev_pickle = "../heymemo_devcombine.pkl"
-    # dev_pickle = "../converted_2_ft2/CHiME6_S07_data.pkl"
+    # dev_pickle = "../heymemo_devcombine.pkl"
+    dev_pickle = "../converted_2_ft2/CHiME6_S07_data.pkl"
     checkpoint_path = './entercompany_checkpoint/'
     checkout_file1 = "crnn_model_best.pth"
     

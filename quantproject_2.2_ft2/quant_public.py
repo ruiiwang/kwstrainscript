@@ -36,6 +36,7 @@ if __name__ == "__main__":
     
     # 生成量化模型 checkpoint_quant_name 和param_Q_file这两个文件参与后面运算
     float_net, fixed_net = quant_model_parameter(checkoutpoint1, config["feature"], checkpoint_quant_file,param_Q_file)
+    print("float_net:", float_net, "\nfixed_net:", fixed_net)
     
     target_class = config["classes"]
     
