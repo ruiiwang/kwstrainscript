@@ -1,6 +1,7 @@
 import re
 import os
 import sys
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -17,18 +18,29 @@ from mfcc_io import mfcc
     绘制量化前、量化后 HeyMemo 类别的概率变化图（附加音量），保存为 .png。
 '''
 # 顶部常量区域
-LOG_PATH = r"./quantproject_2.2_ft2/heymemo_short.log"
-OUTPUT_DIR = r"./test_results"
+QUANT_LOG_PATH = "./quantproject_2.2_ft3/recording2.log" # 量化模型log
+USE_QUANT_LOG = True # 是否使用量化的log
+INPUT_AUDIO_PATH = "./string_sample/other/recording_20251021_103943_240.wav" # 输入的wav文件
+OUTPUT_DIR = "./test_results/recording_0.999_0.999/" # 输出路径
 RELATIVE_TIME = True
 DPI = 60
-MODEL_PATH = r"checkpoint/checkpoint_2.2_ft2/crnn_model_best.pth"
-ORIGINAL_LOG_PATH = r"./float_heymemo_short.log"
-MERGED_LOG_PATH_TEMPLATE = r"./merged_heymemo_short.log"
-OUTPUT_PLOT_PATH = r"./test_results/merged_heymemo_short.png"
+MODEL_PATH = "checkpoint/checkpoint_2.2_ft3/crnn_model_best.pth" # 模型路径
+ORIGINAL_LOG_PATH = os.path.join(OUTPUT_DIR, "float_recording.log") # 原始模型log存储位置
+MERGED_LOG_PATH_TEMPLATE = os.path.join(OUTPUT_DIR, "merged_recording.log") # 合并后的log存储位置
+OUTPUT_PLOT_PATH = os.path.join(OUTPUT_DIR, "merged_recording.png") # 合并后概率图像存储位置
+SAVE_ORIGINAL_LOG = True # 是否存储原始模型log
+SAVE_MERGED_LOG = True # 是否存储合并后的log
+SAVE_PLOT = True # 是否存储合并后的概率图像
+PLOT_SEGMENT_SECONDS = 60  # 每张子图的时间长度（秒）
 
 def sanitize_filename(name: str) -> str:
     # Windows 文件名非法字符替换为下划线
     return re.sub(r'[\\/:\*\?"<>\|.]', '', name)
+
+def make_segment_plot_path(base_path: str, index: int) -> str:
+    # 生成分段图像路径：base名 + _index + .png
+    root, _ = os.path.splitext(base_path)
+    return f"{root}_{index}.png"
 
 class Config:
     SR = 16000
@@ -87,11 +99,13 @@ class StreamSimulator:
         timestamps, heymemo_probs, rms_values = [], [], []
         merged_log_lines = []
 
-        # 统一一次性打开 original.log，必要时创建目录
-        orig_dir = os.path.dirname(ORIGINAL_LOG_PATH)
-        if orig_dir and not os.path.isdir(orig_dir):
-            os.makedirs(orig_dir, exist_ok=True)
-        original_log_file = open(ORIGINAL_LOG_PATH, "a", encoding="utf-8")
+        # 统一一次性打开 original.log，必要时创建目录（可选）
+        original_log_file = None
+        if SAVE_ORIGINAL_LOG:
+            orig_dir = os.path.dirname(ORIGINAL_LOG_PATH)
+            if orig_dir and not os.path.isdir(orig_dir):
+                os.makedirs(orig_dir, exist_ok=True)
+            original_log_file = open(ORIGINAL_LOG_PATH, "a", encoding="utf-8")
 
         try:
             for i in range(0, len(audio), self.config.HOP_SAMPLES):
@@ -127,13 +141,14 @@ class StreamSimulator:
                 frame_time_sec = i / self.config.SR
                 outputs_str = f"[{outputs[0, 0].item():.6f}, {outputs[0, 1].item():.6f}]"
                 probs_str = f"[{probs[0]:.6f}, {probs[1]:.6f}]"
-                original_log_file.write(
-                    f"time: {frame_time_sec:.2f}s outputs: {outputs_str} probs: {probs_str}\n"
-                )
+                if original_log_file:
+                    original_log_file.write(
+                        f"time: {frame_time_sec:.2f}s outputs: {outputs_str} probs: {probs_str}\n"
+                    )
                 timestamps.append(frame_time_sec)
-                heymemo_probs.append(float(probs[self.config.CLASS_NAMES_INDEX["HeyMemo"]]))
+                heymemo_probs.append(float(probs[self.config.CLASS_NAMES_INDEX['HeyMemo']]))
 
-                # 生成合并日志行
+                # 生成合并日志行（仅当启用且匹配到量化数据）
                 if generate_merged_log and quant_data:
                     time_key = f"{frame_time_sec:.2f}"
                     if time_key in quant_data:
@@ -142,16 +157,17 @@ class StreamSimulator:
                             f"time:{frame_time_sec:.2f} "
                             f"float:{outputs_str} "
                             f"probs:{probs_str} "
-                            f"quant: class:{quant_info['class']}, "
-                            f"idx:{quant_info['idx']}, "
+                            # f"quant: class:{quant_info['class']}, "
+                            # f"idx:{quant_info['idx']}, "
                             f"float_net:[{quant_info['float_net']}], "
                             f"softmax_result:[{quant_info['softmax_result']}]"
                         )
                         merged_log_lines.append(merged_line)
 
         finally:
-            original_log_file.close()
-            
+            if original_log_file:
+                original_log_file.close()
+
         # 归一化音量
         rms_values = np.array(rms_values, dtype=float)
         if rms_values.size > 0 and np.max(rms_values) > 0:
@@ -161,8 +177,6 @@ class StreamSimulator:
             return timestamps, heymemo_probs, np.array(rms_values), merged_log_lines
         return timestamps, heymemo_probs, np.array(rms_values)
 
-# 新增：根据日志中的首字段推断本地可用的 wav 路径
-_FIND_CACHE = {}
 def find_audio_path(file_id: str, log_path: str):
     if file_id in _FIND_CACHE:
         return _FIND_CACHE[file_id]
@@ -190,26 +204,36 @@ def find_audio_path(file_id: str, log_path: str):
 def parse_log_group_by_file(file_path):
     data = {}  # {file_id: {"times":[], "p0":[], "p1":[]}}
     time_re = re.compile(r'time:(\d+(?:\.\d+)?)s')
-    softmax_bracket_re = re.compile(r'softmax_result:\[(.*?)\]')
+    softmax_bracket_re_old = re.compile(r'softmax_result:\[(.*?)\]')
+    softmax_bracket_re_new = re.compile(r'softmax:\s*\[(.*?)\]')
 
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
-            file_id = line.split(',', 1)[0].strip()
+            # 兼容两种 softmax 写法
             t_match = time_re.search(line)
-            if not t_match or 'softmax_result:None' in line:
+            if not t_match:
                 continue
-            s_match = softmax_bracket_re.search(line)
+            s_match = softmax_bracket_re_old.search(line) or softmax_bracket_re_new.search(line)
             if not s_match:
                 continue
-            t = float(t_match.group(1))
+
+            # 提取数值
             s_content = s_match.group(1)
             nums = re.findall(r'-?\d+(?:\.\d+)?(?:e[+-]?\d+)?', s_content)
             if len(nums) < 2:
                 continue
             p0 = float(nums[0]); p1 = float(nums[1])
+
+            # 旧日志有“文件名, time:...”，新日志没有文件名；使用默认键
+            parts = line.split(',', 1)
+            if len(parts) >= 2 and 'time:' in parts[1]:
+                file_id = parts[0].strip()
+            else:
+                file_id = '__GLOBAL__'
+
             if file_id not in data:
                 data[file_id] = {"times": [], "p0": [], "p1": []}
-            data[file_id]["times"].append(t)
+            data[file_id]["times"].append(float(t_match.group(1)))
             data[file_id]["p0"].append(p0)
             data[file_id]["p1"].append(p1)
     return data
@@ -218,117 +242,166 @@ def parse_quant_data_for_merge(file_path):
     """解析量化日志，返回按时间索引的字典，用于合并日志生成"""
     data = {}
     time_re = re.compile(r'time:(\d+(?:\.\d+)?)s')
-    
+    logits_re = re.compile(r'\[\[\s*(.*?)\s*\]\]')           # 匹配 [[ logits ]]
+    softmax_re = re.compile(r'softmax:\s*\[\s*(.*?)\s*\]')   # 匹配 softmax: [ ... ]
+
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
         for line in f:
             t_match = time_re.search(line)
             if not t_match:
                 continue
-            
-            # 提取各字段
-            m_cls = re.search(r'class:([^,]+)', line)
-            m_idx = re.search(r'idx:(\d+)', line)
-            m_float_net = re.search(r'float_net:\[(.*?)\]', line)
-            m_softmax = re.search(r'softmax_result:\[(.*?)\]', line)
-            
-            if not (m_cls and m_idx and m_float_net and m_softmax):
-                continue
-            
+            sm_match = softmax_re.search(line)
+            if not sm_match:
+                # 兼容旧格式 softmax_result:[...]
+                sm_match = re.search(r'softmax_result:\[(.*?)\]', line)
+                if not sm_match:
+                    continue
+
             time_key = f"{float(t_match.group(1)):.2f}"
+            logits_match = logits_re.search(line)
+            logits_content = logits_match.group(1).strip() if logits_match else ""
+            softmax_content = sm_match.group(1).strip()
+
+            # 填充必要字段，旧代码的合并逻辑可继续运行
             data[time_key] = {
-                'class': m_cls.group(1).strip(),
-                'idx': m_idx.group(1).strip(),
-                'float_net': m_float_net.group(1).strip(),
-                'softmax_result': m_softmax.group(1).strip(),
+                'float_net': logits_content,  # 用 [[ logits ]] 作为“float_net”的内容
+                'softmax_result': softmax_content,
             }
     return data
 
 def main():
-    grouped = parse_log_group_by_file(LOG_PATH)
+    grouped = parse_log_group_by_file(QUANT_LOG_PATH)
     if not grouped:
-        print(f"没有解析到任何有效数据，请检查日志文件: {LOG_PATH}")
+        print(f"没有解析到任何有效数据，请检查日志文件: {QUANT_LOG_PATH}")
         return
 
+    # 不再强制依赖量化日志分组解析，允许无量化数据运行
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    # 新增：准备一次性加载的流式推理器
+    # 准备一次性加载的流式推理器
     sim = StreamSimulator(MODEL_PATH, Config())
-    
-    # 新增：解析量化数据用于合并日志
-    quant_data = parse_quant_data_for_merge(LOG_PATH)
 
-    for file_id, series in grouped.items():
-        times = series["times"]; p0_list = series["p0"]; p1_list = series["p1"]
-        if not times:
-            continue
+    # 可选解析量化数据（用于画量化曲线和可选的合并日志）
+    quant_data = None
+    times, p1_list = [], []
+    if USE_QUANT_LOG and os.path.isfile(QUANT_LOG_PATH):
+        quant_data = parse_quant_data_for_merge(QUANT_LOG_PATH)
+        order = sorted(quant_data.keys(), key=lambda k: float(k))
+        times = [float(k) for k in order]
+        for k in order:
+            s_content = quant_data[k]['softmax_result']
+            nums = re.findall(r'-?\d+(?:\.\d+)?(?:e[+-]?\d+)?', s_content)
+            if len(nums) >= 2:
+                p1_list.append(float(nums[1]))
 
-        # 排序
-        order = sorted(range(len(times)), key=lambda i: times[i])
-        times = [times[i] for i in order]
-        p0_list = [p0_list[i] for i in order]
-        p1_list = [p1_list[i] for i in order]
+    # 直接使用顶部常量定义的音频路径进行流式推理
+    wav_path = INPUT_AUDIO_PATH
+    pic_times, pic_probs, pic_rms = [], [], np.array([])
+    merged_log_lines = []
 
-        # 解析本地 wav 路径并跑一次 pic_string 流式
-        wav_path = find_audio_path(file_id, LOG_PATH)
-        pic_times, pic_probs, pic_rms = [], [], np.array([])
-        merged_log_lines = []
-        
-        if wav_path and os.path.isfile(wav_path):
-            result = sim.run_once(wav_path, generate_merged_log=True, quant_data=quant_data)
-            pic_times, pic_probs, pic_rms, merged_log_lines = result
+    result = sim.run_once(
+        wav_path,
+        generate_merged_log=SAVE_MERGED_LOG,
+        quant_data=quant_data
+    )
+    if SAVE_MERGED_LOG:
+        pic_times, pic_probs, pic_rms, merged_log_lines = result
+        # 使用模板生成合并日志路径；支持无占位的固定路径
+        file_stub = sanitize_filename(os.path.basename(wav_path))
+        if "{file_stub}" in MERGED_LOG_PATH_TEMPLATE:
+            merged_log_path = MERGED_LOG_PATH_TEMPLATE.format(file_stub=file_stub)
+        else:
+            merged_log_path = MERGED_LOG_PATH_TEMPLATE
 
-            # 使用模板生成合并日志路径；支持无占位的固定路径
-            file_stub = sanitize_filename(file_id)
-            if "{file_stub}" in MERGED_LOG_PATH_TEMPLATE:
-                merged_log_path = MERGED_LOG_PATH_TEMPLATE.format(file_stub=file_stub)
-            else:
-                merged_log_path = MERGED_LOG_PATH_TEMPLATE
-
-            # 写入前确保目录存在
+        # 写入前确保目录存在（仅当需要保存且有内容）
+        if merged_log_lines:
             merged_dir = os.path.dirname(merged_log_path)
             if merged_dir and not os.path.isdir(merged_dir):
                 os.makedirs(merged_dir, exist_ok=True)
+            with open(merged_log_path, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(merged_log_lines))
+            print(f"已生成合并日志: {merged_log_path}", file=sys.stderr)
+    else:
+        pic_times, pic_probs, pic_rms = result
 
-            if merged_log_lines:
-                with open(merged_log_path, 'w', encoding='utf-8') as f:
-                    f.write('\n'.join(merged_log_lines))
-                print(f"已生成合并日志: {merged_log_path}", file=sys.stderr)
-        else:
-            # 不要在没有路径时调用推理
-            print(f"警告：未找到对应音频文件，跳过 pic 曲线: {file_id}")
-            pic_times, pic_probs, pic_rms = sim.run_once(wav_path)
+    # 相对时间对齐（两条曲线各自从 0s 开始）
+    if RELATIVE_TIME:
+        if len(times) > 0:
+            t0 = times[0]; times = [t - t0 for t in times]
+        if len(pic_times) > 0:
+            t1 = pic_times[0]; pic_times = [t - t1 for t in pic_times]
 
-        # 相对时间对齐（两条曲线各自从 0s 开始）
-        if RELATIVE_TIME:
-            if len(times) > 0:
-                t0 = times[0]; times = [t - t0 for t in times]
-            if len(pic_times) > 0:
-                t1 = pic_times[0]; pic_times = [t - t1 for t in pic_times]
+    if SAVE_PLOT:
+        # 计算总时长与分段数量
+        total_max_t = max([max(times) if times else 0.0,
+                           max(pic_times) if pic_times else 0.0])
+        n_segments = max(1, math.ceil(total_max_t / PLOT_SEGMENT_SECONDS))
 
-        plt.figure(figsize=(30, 15), dpi=DPI)
-        # 橙色：日志 softmax[1]（量化链路）
-        plt.plot(times, p1_list, label="quant softmax[1]", color="orange", lw=3)
-        # 红色：pic_string softmax[1]（浮点模型链路）
-        if pic_times:
-            plt.plot(pic_times, pic_probs, label="float softmax[1]", color="red", lw=3)
-        # 蓝色：音量（归一化）
-        if pic_times and pic_rms.size > 0:
-            plt.plot(pic_times, 0.5*pic_rms, label="volume", color="blue", lw=1)
+        def slice_series(xs, ys, start, end):
+            seg_x, seg_y = [], []
+            for x, y in zip(xs, ys):
+                if start <= x < end:
+                    seg_x.append(x - start)  # 每段内从0开始
+                    seg_y.append(y)
+            return seg_x, seg_y
 
-        # x 轴每秒一个刻度
-        ax = plt.gca()
-        max_t = max([max(times) if times else 0.0, max(pic_times) if pic_times else 0.0])
-        ax.set_xticks(list(range(0, int(max_t) + 1, 1)))
+        def slice_series_np(xs, ys_np, start, end):
+            seg_x, seg_y = [], []
+            for i, x in enumerate(xs):
+                if start <= x < end:
+                    seg_x.append(x - start)
+                    seg_y.append(float(ys_np[i]))
+            return seg_x, seg_y
 
-        plt.xlabel("Time(s)" if RELATIVE_TIME else "Time(s, absolute)")
-        plt.ylabel("Value")
-        plt.title(f"Log vs Pic Softmax[1] + Volume - {file_id}")
-        plt.grid(True, linestyle="--", alpha=0.4)
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(OUTPUT_PLOT_PATH)
-        plt.close()
-        print(f"已保存图像到: {OUTPUT_PLOT_PATH}")
+        # 逐段创建并保存独立的 PNG
+        for i in range(n_segments):
+            seg_start = i * PLOT_SEGMENT_SECONDS
+            seg_end = (i + 1) * PLOT_SEGMENT_SECONDS
+
+            plt.figure(figsize=(30, 8), dpi=DPI)
+            ax = plt.gca()
+            ax.grid(True, linestyle="--", alpha=0.4)
+
+            # 橙色：量化 softmax[1]（仅在启用且有数据）
+            if times and p1_list and USE_QUANT_LOG:
+                seg_x_q, seg_y_q = slice_series(times, p1_list, seg_start, seg_end)
+                if seg_x_q:
+                    ax.plot(seg_x_q, seg_y_q, label="quant softmax[1]", color="orange", lw=3)
+
+            # 红色：浮点 softmax[1]
+            if pic_times and pic_probs:
+                seg_x_f, seg_y_f = slice_series(pic_times, pic_probs, seg_start, seg_end)
+                if seg_x_f:
+                    ax.plot(seg_x_f, seg_y_f, label="float softmax[1]", color="red", lw=3)
+
+            # 蓝色：音量（归一化）
+            if pic_times and pic_rms.size > 0:
+                seg_x_v, seg_y_v = slice_series_np(pic_times, 0.5 * pic_rms, seg_start, seg_end)
+                if seg_x_v:
+                    ax.plot(seg_x_v, seg_y_v, label="volume", color="blue", lw=1)
+
+            # 该段的 x 轴刻度：每秒一个
+            seg_len = min(PLOT_SEGMENT_SECONDS, max(0.0, total_max_t - seg_start))
+            ax.set_xticks(list(range(0, int(math.ceil(seg_len)) + 1, 1)))
+            ax.set_xlim(0, seg_len)
+
+            ax.set_xlabel("Time(s)" if RELATIVE_TIME else "Time(s, absolute)")
+            ax.set_ylabel("Value")
+            ax.set_title(f"{os.path.basename(INPUT_AUDIO_PATH)} — {seg_start:.0f}s to {min(seg_end, total_max_t):.0f}s")
+            ax.legend()
+
+            segment_path = make_segment_plot_path(OUTPUT_PLOT_PATH, i + 1)
+            # 保存前确保分段图像所在目录存在
+            segment_dir = os.path.dirname(segment_path)
+            if segment_dir and not os.path.isdir(segment_dir):
+                os.makedirs(segment_dir, exist_ok=True)
+
+            plt.tight_layout()
+            plt.savefig(segment_path)
+            plt.close()
+            print(f"已保存图像到: {segment_path}")
+    else:
+        print("已跳过绘图（SAVE_PLOT=False）")
 
 if __name__ == "__main__":
     main()
